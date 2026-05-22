@@ -1,0 +1,1574 @@
+<!DOCTYPE html>
+<html lang="hu">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Szalézi Iskola – Szülői Kérdőív Eredményei</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,300&display=swap');
+
+    :root {
+      --bg: #f5f1eb;
+      --card: #fffdf9;
+      --ink: #1a1612;
+      --muted: #6b5f52;
+      --accent: #8b3a2a;
+      --accent2: #3a5f8b;
+      --accent3: #4a7c59;
+      --border: #d9cfc4;
+      --shadow: rgba(26, 22, 18, 0.10);
+      --gold: #b8860b;
+      --cmp-a: #3a5f8b;
+      --cmp-b: #b8860b;
+      --cmp-diff-pos: #4a7c59;
+      --cmp-diff-neg: #8b3a2a;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Source Serif 4', Georgia, serif;
+      background: var(--bg);
+      color: var(--ink);
+      min-height: 100vh;
+      padding: 0 0 80px 0;
+    }
+
+    /* HEADER */
+    .site-header {
+      background: var(--ink);
+      color: var(--bg);
+      padding: 48px 40px 36px;
+      position: relative;
+      overflow: hidden;
+    }
+    .site-header::before {
+      content: '';
+      position: absolute; top: -40px; right: -60px;
+      width: 320px; height: 320px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.06);
+    }
+    .site-header::after {
+      content: '';
+      position: absolute; bottom: -60px; left: 60px;
+      width: 200px; height: 200px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.04);
+    }
+    .header-eyebrow {
+      font-size: 11px; font-weight: 600; letter-spacing: 3px;
+      text-transform: uppercase; color: rgba(245,241,235,0.5); margin-bottom: 12px;
+    }
+    .header-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(26px,4vw,44px); font-weight: 700; line-height: 1.15; margin-bottom: 8px;
+    }
+    .header-subtitle { font-size: 15px; color: rgba(245,241,235,0.65); font-style: italic; font-weight: 300; }
+    .header-meta { margin-top: 20px; display: flex; gap: 32px; flex-wrap: wrap; }
+    .meta-stat { text-align: center; }
+    .meta-num { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 700; color: #f5f1eb; }
+    .meta-label { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(245,241,235,0.45); }
+
+    /* FILTER BAR */
+    .filter-bar {
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 40px;
+      display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+      position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 2px 12px var(--shadow);
+    }
+    .filter-label { font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+    .filter-checks { display: flex; gap: 12px; flex-wrap: wrap; }
+    .filter-check {
+      display: flex; align-items: center; gap: 6px; cursor: pointer;
+      padding: 5px 12px; border-radius: 20px; border: 1.5px solid var(--border);
+      font-size: 13px; font-family: 'Source Serif 4', serif;
+      transition: all 0.2s; user-select: none; background: white;
+    }
+    .filter-check input { display: none; }
+    .filter-check.active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+    .filter-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+    .dot-12 { background: #c0392b; }
+    .dot-34 { background: #e67e22; }
+    .dot-56 { background: #27ae60; }
+    .dot-78 { background: #2980b9; }
+
+    /* COMPARE TOGGLE BUTTON */
+    .cmp-toggle-btn {
+      margin-left: auto;
+      display: flex; align-items: center; gap: 8px;
+      padding: 7px 16px; border-radius: 20px;
+      border: 1.5px solid var(--border);
+      background: white; cursor: pointer;
+      font-size: 13px; font-family: 'Source Serif 4', serif;
+      transition: all 0.2s; white-space: nowrap; font-weight: 600;
+    }
+    .cmp-toggle-btn:hover { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+    .cmp-toggle-btn.active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+    .cmp-icon { font-size: 15px; }
+
+    /* COMPARE CONTROLS BAR */
+    .cmp-bar {
+      display: none;
+      background: #1a1612;
+      padding: 14px 40px;
+      gap: 20px; align-items: center; flex-wrap: wrap;
+      border-bottom: 2px solid rgba(255,255,255,0.08);
+    }
+    .cmp-bar.visible { display: flex; }
+    .cmp-group-label {
+      font-size: 11px; font-weight: 600; letter-spacing: 2px;
+      text-transform: uppercase; color: rgba(245,241,235,0.5);
+      white-space: nowrap;
+    }
+    .cmp-select-wrap { display: flex; align-items: center; gap: 10px; }
+    .cmp-swatch {
+      width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0;
+    }
+    .swatch-a { background: var(--cmp-a); }
+    .swatch-b { background: var(--cmp-b); }
+    .cmp-select {
+      padding: 6px 12px; border-radius: 4px;
+      border: 1.5px solid rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.07); color: #f5f1eb;
+      font-family: 'Source Serif 4', serif; font-size: 13px;
+      cursor: pointer; outline: none;
+    }
+    .cmp-select option { background: #1a1612; }
+    .cmp-sep { color: rgba(245,241,235,0.2); font-size: 20px; }
+    .cmp-info {
+      margin-left: auto;
+      font-size: 12px; color: rgba(245,241,235,0.4);
+      font-style: italic;
+    }
+
+    /* COMPARE LEGEND (shown near charts in compare mode) */
+    .cmp-chart-legend {
+      display: none;
+      align-items: center; gap: 20px; flex-wrap: wrap;
+      margin-bottom: 14px; padding: 10px 14px;
+      background: rgba(26,22,18,0.04);
+      border-radius: 4px; border: 1px solid var(--border);
+    }
+    .cmp-chart-legend.visible { display: flex; }
+    .cmp-leg-item { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--muted); }
+    .cmp-leg-swatch { width: 28px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+
+    /* MAIN LAYOUT */
+    .main { padding: 40px 40px 0; max-width: 1400px; margin: 0 auto; }
+
+    /* SECTION */
+    .section { margin-bottom: 56px; }
+    .section-head {
+      display: flex; align-items: baseline; gap: 16px; margin-bottom: 24px;
+      padding-bottom: 12px; border-bottom: 1.5px solid var(--border);
+    }
+    .section-num { font-family: 'Playfair Display', serif; font-size: 13px; font-weight: 700; color: var(--accent); letter-spacing: 1px; }
+    .section-title { font-family: 'Playfair Display', serif; font-size: 19px; font-weight: 600; color: var(--ink); flex: 1; }
+
+    /* CARD */
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 4px; padding: 28px; box-shadow: 0 1px 4px var(--shadow); }
+
+    /* PIE CHART LAYOUT */
+    .pie-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
+    .pie-wrap { position: relative; max-width: 360px; margin: 0 auto; }
+    .pie-canvas-wrap { position: relative; height: 260px; }
+    .pie-legend { margin-top: 16px; display: flex; flex-direction: column; gap: 6px; }
+    .legend-item { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--muted); }
+    .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .legend-pct { margin-left: auto; font-weight: 600; color: var(--ink); font-size: 12px; }
+
+    /* BAR CHART */
+    .bar-canvas-wrap { position: relative; min-height: 320px; }
+
+    /* COMPARE PIE LAYOUT */
+    .cmp-pie-container {
+      display: none;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 24px;
+    }
+    .cmp-pie-container.visible { display: grid; }
+    .cmp-pie-title {
+      text-align: center; font-size: 12px; font-weight: 600;
+      letter-spacing: 1.5px; text-transform: uppercase;
+      margin-bottom: 10px; padding: 6px;
+      border-radius: 3px;
+    }
+    .cmp-pie-title.a { background: rgba(58,95,139,0.1); color: var(--cmp-a); }
+    .cmp-pie-title.b { background: rgba(184,134,11,0.1); color: var(--cmp-b); }
+    .cmp-pie-title.diff { background: rgba(74,124,89,0.1); color: var(--accent3); }
+
+    /* COMPARE DIFF TABLE for pies */
+    .diff-table {
+      width: 100%; border-collapse: collapse; font-size: 13px;
+      margin-top: 8px;
+    }
+    .diff-table th {
+      font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase;
+      color: var(--muted); font-weight: 600; padding: 6px 8px;
+      border-bottom: 1.5px solid var(--border); text-align: left;
+    }
+    .diff-table td { padding: 7px 8px; border-bottom: 1px solid rgba(217,207,196,0.5); }
+    .diff-table tr:last-child td { border-bottom: none; }
+    .diff-val { font-weight: 600; }
+    .diff-pos { color: var(--cmp-diff-pos); }
+    .diff-neg { color: var(--cmp-diff-neg); }
+    .diff-neu { color: var(--muted); }
+
+    /* TEXT ANSWERS BOX */
+    .text-answers-box { background: var(--card); border: 1px solid var(--border); border-radius: 4px; box-shadow: 0 1px 4px var(--shadow); overflow: hidden; }
+    .text-answers-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 24px; background: var(--ink); color: var(--bg);
+      font-size: 11px; letter-spacing: 2.5px; text-transform: uppercase;
+    }
+    .text-answers-count { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; margin-left: auto; opacity: 0.7; }
+    /* Compare mode: két oszlopos elrendezés */
+    .text-answers-cols { display: flex; gap: 0; }
+    .text-answers-col { flex: 1; border-right: 1px solid var(--border); }
+    .text-answers-col:last-child { border-right: none; }
+    .text-col-header {
+      padding: 10px 18px; font-size: 11px; font-weight: 600;
+      letter-spacing: 1.5px; text-transform: uppercase; border-bottom: 1px solid var(--border);
+    }
+    .text-col-header.a { background: rgba(58,95,139,0.08); color: var(--cmp-a); }
+    .text-col-header.b { background: rgba(184,134,11,0.08); color: var(--cmp-b); }
+    .text-answers-list { list-style: none; padding: 0; margin: 0; }
+    .text-answer-item {
+      display: flex; align-items: baseline; gap: 10px;
+      padding: 11px 20px; border-bottom: 1px solid rgba(217,207,196,0.4);
+      font-size: 13.5px; line-height: 1.6; color: var(--ink);
+      transition: background 0.15s;
+    }
+    .text-answer-item:last-child { border-bottom: none; }
+    .text-answer-item:hover { background: rgba(26,22,18,0.03); }
+    .text-answer-num {
+      font-family: 'Playfair Display', serif; font-size: 11px;
+      color: var(--muted); min-width: 20px; flex-shrink: 0; padding-top: 1px;
+    }
+    .text-empty { padding: 24px 20px; color: var(--muted); font-style: italic; font-size: 13px; }
+
+    /* WEIGHT TOGGLE */
+    .weight-toggle {
+      display: inline-flex; align-items: center; gap: 10px; margin-bottom: 20px;
+      padding: 8px 16px; background: var(--card); border: 1.5px solid var(--border);
+      border-radius: 4px; cursor: pointer; font-size: 13px;
+      font-family: 'Source Serif 4', serif; transition: all 0.2s; user-select: none;
+    }
+    .weight-toggle.on { background: var(--accent2); color: white; border-color: var(--accent2); }
+    .toggle-knob { width: 28px; height: 16px; background: var(--border); border-radius: 8px; position: relative; transition: background 0.2s; }
+    .weight-toggle.on .toggle-knob { background: rgba(255,255,255,0.35); }
+    .toggle-knob::after { content: ''; position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; background: white; border-radius: 50%; transition: transform 0.2s; }
+    .weight-toggle.on .toggle-knob::after { transform: translateX(12px); }
+
+    /* TWO PIE LAYOUT */
+    .two-pies { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+    .pie-subtitle { font-size: 12px; font-style: italic; color: var(--muted); margin-bottom: 12px; text-align: center; }
+    .sort-row { margin-bottom: 14px; }
+    .sort-btn {
+      background: var(--card); border: 1.5px solid var(--border); color: var(--ink);
+      padding: 8px 14px; border-radius: 4px; cursor: pointer;
+      font-family: 'Source Serif 4', serif; font-size: 13px; transition: all 0.2s;
+    }
+    .sort-btn:hover { background: var(--ink); color: var(--bg); }
+
+    /* COMPARE NOTE BADGE */
+    .cmp-note {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 11px; color: var(--muted); margin-bottom: 14px;
+      padding: 5px 10px; border-radius: 3px;
+      background: rgba(26,22,18,0.04); border: 1px solid var(--border);
+    }
+
+    /* RESPONSE RATES */
+    .response-rates {
+      margin-top: 28px;
+      display: flex; gap: 12px; flex-wrap: wrap;
+    }
+    .rr-item {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 4px;
+      padding: 10px 16px;
+      min-width: 130px;
+    }
+    .rr-grade {
+      font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+      color: rgba(245,241,235,0.45); margin-bottom: 6px;
+    }
+    .rr-bar-wrap {
+      height: 4px; background: rgba(255,255,255,0.12); border-radius: 2px; margin-bottom: 7px; overflow: hidden;
+    }
+    .rr-bar { height: 100%; border-radius: 2px; transition: width 0.6s ease; }
+    .rr-nums {
+      display: flex; justify-content: space-between; align-items: baseline;
+    }
+    .rr-pct {
+      font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; color: #f5f1eb;
+    }
+    .rr-detail {
+      font-size: 11px; color: rgba(245,241,235,0.4);
+    }
+
+    @media (max-width: 900px) {
+      .cmp-pie-container.visible { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 700px) {
+      .site-header { padding: 32px 20px 24px; }
+      .filter-bar { padding: 12px 20px; }
+      .cmp-bar { padding: 12px 20px; }
+      .main { padding: 24px 16px 0; }
+      .two-pies { grid-template-columns: 1fr; }
+      .card { padding: 18px; }
+      .cmp-toggle-btn { margin-left: 0; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <header class="site-header">
+    <div class="header-eyebrow">Szülői véleményfelmérés · 2026</div>
+    <div class="header-title">Szalézi Általános Iskola<br>Kérdőív Eredményei</div>
+    <div class="header-subtitle">Interaktív összesítő dashboard</div>
+    <div class="header-meta">
+      <div class="meta-stat">
+        <div class="meta-num" id="stat-families">–</div>
+        <div class="meta-label">Kitöltő család</div>
+      </div>
+      <div class="meta-stat">
+        <div class="meta-num" id="stat-total-rate">–</div>
+        <div class="meta-label">Összesített kitöltési arány</div>
+      </div>
+      <div class="meta-stat">
+        <div class="meta-num" id="stat-rows">–</div>
+        <div class="meta-label">Adatsor (bontás után)</div>
+      </div>
+      <div class="meta-stat">
+        <div class="meta-num" id="stat-visible">–</div>
+        <div class="meta-label">Aktív szűrés</div>
+      </div>
+    </div>
+
+    <!-- KITÖLTÉSI ARÁNY KORCSOPORTONKÉNT -->
+    <div class="response-rates" id="response-rates">
+      <!-- JS tölti fel -->
+    </div>
+  </header>
+
+  <!-- GLOBAL FILTER -->
+  <div class="filter-bar">
+    <span class="filter-label" id="filter-mode-label">Korcsoport szűrő:</span>
+    <div class="filter-checks" id="filter-checks">
+      <label class="filter-check active" data-grade="1-2 osztály">
+        <input type="checkbox" checked>
+        <span class="filter-dot dot-12"></span>1–2. osztály
+      </label>
+      <label class="filter-check active" data-grade="3-4 osztály">
+        <input type="checkbox" checked>
+        <span class="filter-dot dot-34"></span>3–4. osztály
+      </label>
+      <label class="filter-check active" data-grade="5-6 osztály">
+        <input type="checkbox" checked>
+        <span class="filter-dot dot-56"></span>5–6. osztály
+      </label>
+      <label class="filter-check active" data-grade="7-8 osztály">
+        <input type="checkbox" checked>
+        <span class="filter-dot dot-78"></span>7–8. osztály
+      </label>
+    </div>
+    <button class="cmp-toggle-btn" id="cmp-toggle-btn">
+      <span class="cmp-icon">⇄</span> Összehasonlítás
+    </button>
+  </div>
+
+  <!-- COMPARE CONTROLS -->
+  <div class="cmp-bar" id="cmp-bar">
+    <span class="cmp-group-label">A csoport:</span>
+    <div class="cmp-select-wrap">
+      <span class="cmp-swatch swatch-a"></span>
+      <select class="cmp-select" id="cmp-sel-a">
+        <option value="1-2 osztály">1–2. osztály</option>
+        <option value="3-4 osztály">3–4. osztály</option>
+        <option value="5-6 osztály">5–6. osztály</option>
+        <option value="7-8 osztály">7–8. osztály</option>
+      </select>
+    </div>
+    <span class="cmp-sep">vs</span>
+    <span class="cmp-group-label">B csoport:</span>
+    <div class="cmp-select-wrap">
+      <span class="cmp-swatch swatch-b"></span>
+      <select class="cmp-select" id="cmp-sel-b">
+        <option value="1-2 osztály">1–2. osztály</option>
+        <option value="3-4 osztály">3–4. osztály</option>
+        <option value="5-6 osztály" selected>5–6. osztály</option>
+        <option value="7-8 osztály">7–8. osztály</option>
+      </select>
+    </div>
+    <span class="cmp-info">Az eltérés = B − A érték</span>
+  </div>
+
+  <main class="main">
+
+    <!-- Q1 -->
+    <section class="section" id="q1-section">
+      <div class="section-head">
+        <span class="section-num">1. kérdés</span>
+        <span class="section-title">Melyik osztályba jár a gyermek? (korcsoport-megoszlás)</span>
+      </div>
+      <div class="card">
+        <div id="q1-normal-wrap" class="pie-grid">
+          <div class="pie-wrap">
+            <div class="pie-canvas-wrap"><canvas id="chart-q1"></canvas></div>
+            <div class="pie-legend" id="legend-q1"></div>
+          </div>
+        </div>
+        <div id="q1-cmp-wrap" class="cmp-pie-container">
+          <div>
+            <div class="cmp-pie-title a" id="q1-title-a">A csoport</div>
+            <div class="pie-canvas-wrap"><canvas id="chart-q1-a"></canvas></div>
+            <div class="pie-legend" id="legend-q1-a"></div>
+          </div>
+          <div>
+            <div class="cmp-pie-title b" id="q1-title-b">B csoport</div>
+            <div class="pie-canvas-wrap"><canvas id="chart-q1-b"></canvas></div>
+            <div class="pie-legend" id="legend-q1-b"></div>
+          </div>
+          <div>
+            <div class="cmp-pie-title diff">Eltérés (B − A, %-pont)</div>
+            <div id="q1-diff-table"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Q2 -->
+    <section class="section" id="q2-section">
+      <div class="section-head">
+        <span class="section-num">2. kérdés</span>
+        <span class="section-title">Miért íratta gyermekét a szalézi általános iskolába?</span>
+      </div>
+      <div class="card">
+        <div class="sort-row">
+          <button class="sort-btn" data-chart="q2">Rendezés: csökkenő</button>
+        </div>
+        <div id="q2-cmp-legend" class="cmp-chart-legend">
+          <div class="cmp-leg-item"><span class="cmp-leg-swatch" style="background:var(--cmp-a)"></span><span id="q2-leg-a-label">A csoport</span></div>
+          <div class="cmp-leg-item"><span class="cmp-leg-swatch" style="background:var(--cmp-b)"></span><span id="q2-leg-b-label">B csoport</span></div>
+          <div class="cmp-leg-item"><span class="cmp-leg-swatch" style="background:rgba(74,124,89,0.6); border: 1px dashed var(--accent3)"></span>Eltérés (B − A)</div>
+        </div>
+        <div class="bar-canvas-wrap"><canvas id="chart-q2"></canvas></div>
+      </div>
+    </section>
+
+    <!-- Q3 -->
+    <section class="section" id="q3-section">
+      <div class="section-head">
+        <span class="section-num">3. kérdés</span>
+        <span class="section-title">Volt-e egyéb szempont az iskola választásánál?</span>
+      </div>
+      <div class="text-answers-box" id="text-q3">
+        <!-- JS tölti fel -->
+      </div>
+    </section>
+
+    <!-- Q4 -->
+    <section class="section" id="q4-section">
+      <div class="section-head">
+        <span class="section-num">4. kérdés</span>
+        <span class="section-title">Mennyire teljesültek az előzetes elvárások?</span>
+      </div>
+      <div class="card">
+        <div class="sort-row">
+          <button class="sort-btn" data-chart="q4">Rendezés: csökkenő</button>
+        </div>
+        <div id="q4-cmp-legend" class="cmp-chart-legend">
+          <div class="cmp-leg-item"><span class="cmp-leg-swatch" style="background:var(--cmp-a)"></span><span id="q4-leg-a-label">A csoport</span></div>
+          <div class="cmp-leg-item"><span class="cmp-leg-swatch" style="background:var(--cmp-b)"></span><span id="q4-leg-b-label">B csoport</span></div>
+          <div class="cmp-leg-item"><span class="cmp-leg-swatch" style="background:rgba(74,124,89,0.6); border: 1px dashed var(--accent3)"></span>Eltérés (B − A)</div>
+        </div>
+        <div class="bar-canvas-wrap"><canvas id="chart-q4"></canvas></div>
+      </div>
+    </section>
+
+    <!-- Q2 vs Q4 DIFF -->
+    <section class="section" id="q2-q4-diff-section">
+      <div class="section-head">
+        <span class="section-num">2. vs 4. kérdés</span>
+        <span class="section-title">Elvárások vs. Teljesülés – különbség</span>
+      </div>
+      <div class="card">
+        <div class="sort-row">
+          <button class="sort-btn" data-chart="q2q4">Rendezés: csökkenő</button>
+        </div>
+        <p style="font-size:13px; color:var(--muted); margin-bottom:16px;">
+          Pozitív érték = jobban teljesült, mint amilyen fontosnak tartották<br>
+          Negatív érték = gyengébben teljesült, mint az elvárás
+        </p>
+        <div id="q2q4-cmp-legend" class="cmp-chart-legend">
+          <div class="cmp-leg-item"><span class="cmp-leg-swatch" style="background:var(--cmp-a)"></span><span id="q2q4-leg-a-label">A csoport</span></div>
+          <div class="cmp-leg-item"><span class="cmp-leg-swatch" style="background:var(--cmp-b)"></span><span id="q2q4-leg-b-label">B csoport</span></div>
+          <div class="cmp-leg-item"><span class="cmp-leg-swatch" style="background:rgba(74,124,89,0.6); border: 1px dashed var(--accent3)"></span>Eltérés (B − A)</div>
+        </div>
+        <div class="bar-canvas-wrap"><canvas id="chart-q2-q4-diff"></canvas></div>
+      </div>
+    </section>
+
+    <!-- Q5 -->
+    <section class="section" id="q5-section">
+      <div class="section-head">
+        <span class="section-num">5. kérdés</span>
+        <span class="section-title">Terveik szerint 8. osztályig az iskolában marad gyermekük?</span>
+      </div>
+      <div class="card">
+        <div id="q5-normal-wrap" class="pie-grid">
+          <div class="pie-wrap">
+            <div class="pie-canvas-wrap"><canvas id="chart-q5"></canvas></div>
+            <div class="pie-legend" id="legend-q5"></div>
+          </div>
+        </div>
+        <div id="q5-cmp-wrap" class="cmp-pie-container">
+          <div>
+            <div class="cmp-pie-title a" id="q5-title-a">A csoport</div>
+            <div class="pie-canvas-wrap"><canvas id="chart-q5-a"></canvas></div>
+            <div class="pie-legend" id="legend-q5-a"></div>
+          </div>
+          <div>
+            <div class="cmp-pie-title b" id="q5-title-b">B csoport</div>
+            <div class="pie-canvas-wrap"><canvas id="chart-q5-b"></canvas></div>
+            <div class="pie-legend" id="legend-q5-b"></div>
+          </div>
+          <div>
+            <div class="cmp-pie-title diff">Eltérés (B − A, %-pont)</div>
+            <div id="q5-diff-table"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Q6 -->
+    <section class="section" id="q6-section">
+      <div class="section-head">
+        <span class="section-num">6. kérdés</span>
+        <span class="section-title">Döntésüket mennyiben befolyásolják a felső tagozaton kínált lehetőségek?</span>
+      </div>
+      <div class="card">
+        <div id="q6-normal-wrap" class="pie-grid">
+          <div class="pie-wrap">
+            <div class="pie-canvas-wrap"><canvas id="chart-q6"></canvas></div>
+            <div class="pie-legend" id="legend-q6"></div>
+          </div>
+        </div>
+        <div id="q6-cmp-wrap" class="cmp-pie-container">
+          <div>
+            <div class="cmp-pie-title a" id="q6-title-a">A csoport</div>
+            <div class="pie-canvas-wrap"><canvas id="chart-q6-a"></canvas></div>
+            <div class="pie-legend" id="legend-q6-a"></div>
+          </div>
+          <div>
+            <div class="cmp-pie-title b" id="q6-title-b">B csoport</div>
+            <div class="pie-canvas-wrap"><canvas id="chart-q6-b"></canvas></div>
+            <div class="pie-legend" id="legend-q6-b"></div>
+          </div>
+          <div>
+            <div class="cmp-pie-title diff">Eltérés (B − A, %-pont)</div>
+            <div id="q6-diff-table"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Q7 -->
+    <section class="section" id="q7-section">
+      <div class="section-head">
+        <span class="section-num">7. kérdés</span>
+        <span class="section-title">Szempontok, amelyek alapján megfontolná vagy biztosan szeretné 8. osztályig járatni gyermekét</span>
+      </div>
+      <div class="card">
+        <div class="sort-row">
+          <button class="sort-btn" data-chart="q7">Rendezés: csökkenő</button>
+        </div>
+        <label class="weight-toggle" id="weight-toggle-q7">
+          <div class="toggle-knob"></div>
+          <span id="weight-label-q7">Súlyozás a 6. kérdés alapján: KI</span>
+        </label>
+        <div id="q7-cmp-legend" class="cmp-chart-legend">
+          <div class="cmp-leg-item"><span class="cmp-leg-swatch" style="background:var(--cmp-a)"></span><span id="q7-leg-a-label">A csoport</span></div>
+          <div class="cmp-leg-item"><span class="cmp-leg-swatch" style="background:var(--cmp-b)"></span><span id="q7-leg-b-label">B csoport</span></div>
+          <div class="cmp-leg-item"><span class="cmp-leg-swatch" style="background:rgba(74,124,89,0.6); border: 1px dashed var(--accent3)"></span>Eltérés (B − A)</div>
+        </div>
+        <div class="bar-canvas-wrap"><canvas id="chart-q7"></canvas></div>
+      </div>
+    </section>
+
+    <!-- Q8 -->
+    <section class="section" id="q8-section">
+      <div class="section-head">
+        <span class="section-num">8. kérdés</span>
+        <span class="section-title">Milyen típusú középiskolába szeretné járatni gyermekét?</span>
+      </div>
+      <div class="card">
+        <div id="q8-normal-wrap" class="pie-grid">
+          <div class="pie-wrap">
+            <div class="pie-canvas-wrap"><canvas id="chart-q8"></canvas></div>
+            <div class="pie-legend" id="legend-q8"></div>
+          </div>
+        </div>
+        <div id="q8-cmp-wrap" class="cmp-pie-container">
+          <div>
+            <div class="cmp-pie-title a" id="q8-title-a">A csoport</div>
+            <div class="pie-canvas-wrap"><canvas id="chart-q8-a"></canvas></div>
+            <div class="pie-legend" id="legend-q8-a"></div>
+          </div>
+          <div>
+            <div class="cmp-pie-title b" id="q8-title-b">B csoport</div>
+            <div class="pie-canvas-wrap"><canvas id="chart-q8-b"></canvas></div>
+            <div class="pie-legend" id="legend-q8-b"></div>
+          </div>
+          <div>
+            <div class="cmp-pie-title diff">Eltérés (B − A, %-pont)</div>
+            <div id="q8-diff-table"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Q9 -->
+    <section class="section" id="q9-section">
+      <div class="section-head">
+        <span class="section-num">9. kérdés</span>
+        <span class="section-title">Ha van kisebb gyermeke, tervezi-e a szalézi iskolába íratni?</span>
+      </div>
+      <div class="card">
+        <div id="q9-normal-wrap" class="two-pies">
+          <div>
+            <div class="pie-subtitle">Összes válasz</div>
+            <div class="pie-canvas-wrap"><canvas id="chart-q9a"></canvas></div>
+            <div class="pie-legend" id="legend-q9a"></div>
+          </div>
+          <div>
+            <div class="pie-subtitle">Csak Igen / Még nem döntöttem / Nem</div>
+            <div class="pie-canvas-wrap"><canvas id="chart-q9b"></canvas></div>
+            <div class="pie-legend" id="legend-q9b"></div>
+          </div>
+        </div>
+        <div id="q9-cmp-wrap" class="cmp-pie-container">
+          <div>
+            <div class="cmp-pie-title a" id="q9-title-a">A csoport</div>
+            <div class="pie-canvas-wrap"><canvas id="chart-q9-a"></canvas></div>
+            <div class="pie-legend" id="legend-q9-a"></div>
+          </div>
+          <div>
+            <div class="cmp-pie-title b" id="q9-title-b">B csoport</div>
+            <div class="pie-canvas-wrap"><canvas id="chart-q9-b"></canvas></div>
+            <div class="pie-legend" id="legend-q9-b"></div>
+          </div>
+          <div>
+            <div class="cmp-pie-title diff">Eltérés (B − A, %-pont)</div>
+            <div id="q9-diff-table"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Q10 -->
+    <section class="section" id="q10-section">
+      <div class="section-head">
+        <span class="section-num">10. kérdés</span>
+        <span class="section-title">Volt-e olyan gyermeke, aki átment másik intézménybe?</span>
+      </div>
+      <div class="card">
+        <div id="q10-normal-wrap" class="pie-grid">
+          <div class="pie-wrap">
+            <div class="pie-canvas-wrap"><canvas id="chart-q10"></canvas></div>
+            <div class="pie-legend" id="legend-q10"></div>
+          </div>
+        </div>
+        <div id="q10-cmp-wrap" class="cmp-pie-container">
+          <div>
+            <div class="cmp-pie-title a" id="q10-title-a">A csoport</div>
+            <div class="pie-canvas-wrap"><canvas id="chart-q10-a"></canvas></div>
+            <div class="pie-legend" id="legend-q10-a"></div>
+          </div>
+          <div>
+            <div class="cmp-pie-title b" id="q10-title-b">B csoport</div>
+            <div class="pie-canvas-wrap"><canvas id="chart-q10-b"></canvas></div>
+            <div class="pie-legend" id="legend-q10-b"></div>
+          </div>
+          <div>
+            <div class="cmp-pie-title diff">Eltérés (B − A, %-pont)</div>
+            <div id="q10-diff-table"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Q11 -->
+    <section class="section" id="q11-section">
+      <div class="section-head">
+        <span class="section-num">11. kérdés</span>
+        <span class="section-title">Szempontok, amelyek miatt gyermekét másik intézménybe vitte</span>
+      </div>
+      <div class="card">
+        <div class="sort-row">
+          <button class="sort-btn" data-chart="q11">Rendezés: csökkenő</button>
+        </div>
+        <div id="q11-cmp-legend" class="cmp-chart-legend">
+          <div class="cmp-leg-item"><span class="cmp-leg-swatch" style="background:var(--cmp-a)"></span><span id="q11-leg-a-label">A csoport</span></div>
+          <div class="cmp-leg-item"><span class="cmp-leg-swatch" style="background:var(--cmp-b)"></span><span id="q11-leg-b-label">B csoport</span></div>
+          <div class="cmp-leg-item"><span class="cmp-leg-swatch" style="background:rgba(74,124,89,0.6); border: 1px dashed var(--accent3)"></span>Eltérés (B − A)</div>
+        </div>
+        <div class="bar-canvas-wrap"><canvas id="chart-q11"></canvas></div>
+      </div>
+    </section>
+
+    <!-- Q12 -->
+    <section class="section" id="q12-section">
+      <div class="section-head">
+        <span class="section-num">12. kérdés</span>
+        <span class="section-title">Mi a véleménye az iskolai étkeztetés költségéről?</span>
+      </div>
+      <div class="card">
+        <div id="q12-normal-wrap" class="pie-grid">
+          <div class="pie-wrap">
+            <div class="pie-canvas-wrap"><canvas id="chart-q12"></canvas></div>
+            <div class="pie-legend" id="legend-q12"></div>
+          </div>
+        </div>
+        <div id="q12-cmp-wrap" class="cmp-pie-container">
+          <div>
+            <div class="cmp-pie-title a" id="q12-title-a">A csoport</div>
+            <div class="pie-canvas-wrap"><canvas id="chart-q12-a"></canvas></div>
+            <div class="pie-legend" id="legend-q12-a"></div>
+          </div>
+          <div>
+            <div class="cmp-pie-title b" id="q12-title-b">B csoport</div>
+            <div class="pie-canvas-wrap"><canvas id="chart-q12-b"></canvas></div>
+            <div class="pie-legend" id="legend-q12-b"></div>
+          </div>
+          <div>
+            <div class="cmp-pie-title diff">Eltérés (B − A, %-pont)</div>
+            <div id="q12-diff-table"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Q13 -->
+    <section class="section" id="q13-section">
+      <div class="section-head">
+        <span class="section-num">13. kérdés</span>
+        <span class="section-title">Mi a véleménye az iskolai étkeztetés minőségéről?</span>
+      </div>
+      <div class="card">
+        <div id="q13-normal-wrap" class="pie-grid">
+          <div class="pie-wrap">
+            <div class="pie-canvas-wrap"><canvas id="chart-q13"></canvas></div>
+            <div class="pie-legend" id="legend-q13"></div>
+          </div>
+        </div>
+        <div id="q13-cmp-wrap" class="cmp-pie-container">
+          <div>
+            <div class="cmp-pie-title a" id="q13-title-a">A csoport</div>
+            <div class="pie-canvas-wrap"><canvas id="chart-q13-a"></canvas></div>
+            <div class="pie-legend" id="legend-q13-a"></div>
+          </div>
+          <div>
+            <div class="cmp-pie-title b" id="q13-title-b">B csoport</div>
+            <div class="pie-canvas-wrap"><canvas id="chart-q13-b"></canvas></div>
+            <div class="pie-legend" id="legend-q13-b"></div>
+          </div>
+          <div>
+            <div class="cmp-pie-title diff">Eltérés (B − A, %-pont)</div>
+            <div id="q13-diff-table"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Q14 -->
+    <section class="section" id="q14-section">
+      <div class="section-head">
+        <span class="section-num">14. kérdés</span>
+        <span class="section-title">Egyéb észrevételek és javaslatok</span>
+      </div>
+      <div class="text-answers-box" id="text-q14">
+        <!-- JS tölti fel -->
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    // ============================================================
+    // PALETTES
+    // ============================================================
+    const PIE_COLORS = [
+      '#8b3a2a','#3a5f8b','#4a7c59','#b8860b','#6b4c8b','#2e7d7d',
+      '#c0633a','#4a6b8b','#7c5a4a','#5a8b5a','#8b7a3a','#5a3a8b'
+    ];
+    const BAR_POS = '#3a5f8b';
+    const BAR_NEG = '#8b3a2a';
+    const BAR_NEU = '#9e9589';
+    const CMP_A = '#3a5f8b';
+    const CMP_B = '#b8860b';
+    const CMP_DIFF_POS = 'rgba(74,124,89,0.75)';
+    const CMP_DIFF_NEG = 'rgba(139,58,42,0.75)';
+    const CMP_DIFF_NEU = 'rgba(158,149,137,0.6)';
+
+    const SCORE_MAP = {
+      'Teljesen egyetértek': 2, 'Egyetértek': 1, 'Semleges': 0,
+      'Inkább nem értek egyet': -1, 'Egyáltalán nem értek egyet': -2
+    };
+    const WEIGHT_MAP = {
+      'Egyáltalán nem': 0.4,
+      'Nem döntően, de kis mértékben szerepet játszik': 0.4,
+      'Talán': 0.8,
+      'Nagyon fontos szempont': 1.2,
+      'Kizárólag ez határozza meg': 1.6
+    };
+    const GRADE_KEYS = ['1-2 osztály','3-4 osztály','5-6 osztály','7-8 osztály'];
+    const GRADE_SHORT = {
+      '1-2 osztály': '1–2. o.',
+      '3-4 osztály': '3–4. o.',
+      '5-6 osztály': '5–6. o.',
+      '7-8 osztály': '7–8. o.'
+    };
+
+    // Összes tanuló korcsoportonként (szülő által megadott)
+    const CLASS_SIZES = {
+      '1-2 osztály': 55,
+      '3-4 osztály': 45,
+      '5-6 osztály': 68,
+      '7-8 osztály': 28
+    };
+    const TOTAL_STUDENTS = Object.values(CLASS_SIZES).reduce((a, b) => a + b, 0);
+
+    // Sáv színe a %-arány szerint
+    function rrColor(pct) {
+      if (pct >= 60) return '#4a7c59';
+      if (pct >= 35) return '#b8860b';
+      return '#8b3a2a';
+    }
+
+    function renderResponseRates() {
+      // Kitöltők száma korcsoportonként (egyedi családok, nem expanded sorok)
+      // Egy család több korcsoporthoz is tartozhat → az expanded allRows alapján számoljuk
+      // de egy korcsoporthoz csak egyszer (az _grade mező alapján)
+      const countsByGrade = {};
+      GRADE_KEYS.forEach(g => countsByGrade[g] = 0);
+      allRows.forEach(r => {
+        if (GRADE_KEYS.includes(r._grade)) countsByGrade[r._grade]++;
+      });
+
+      const totalPct = Math.round(allRows.length / TOTAL_STUDENTS * 100);
+
+      // Összesített stat frissítése
+      document.getElementById('stat-total-rate').textContent = totalPct + '%';
+
+      // Korcsoportos panel
+      const el = document.getElementById('response-rates');
+      el.innerHTML = GRADE_KEYS.map(g => {
+        const filled = countsByGrade[g];
+        const total = CLASS_SIZES[g];
+        const pct = Math.round(filled / total * 100);
+        const color = rrColor(pct);
+        return `<div class="rr-item">
+          <div class="rr-grade">${g.replace(' osztály', '. o.')}</div>
+          <div class="rr-bar-wrap"><div class="rr-bar" style="width:${pct}%;background:${color}"></div></div>
+          <div class="rr-nums">
+            <span class="rr-pct">${pct}%</span>
+            <span class="rr-detail">${filled} / ${total} cs.</span>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    // ============================================================
+    // STATE
+    // ============================================================
+    let allRows = [];
+    let activeGrades = new Set(GRADE_KEYS);
+    let compareMode = false;
+    let cmpGradeA = '1-2 osztály';
+    let cmpGradeB = '5-6 osztály';
+    let weighQ7 = false;
+    let charts = {};
+    let barSortMode = { q2:'desc', q4:'desc', q2q4:'desc', q7:'desc', q11:'desc' };
+
+    // ============================================================
+    // CSV DATA (embedded) — IDE KERÜL AZ EREDETI TSV_DATA
+    // ============================================================
+    const TSV_DATA = `Időbélyeg	Hányadik osztályba jár/járnak a gyermeke/gyermekei? (több is bejelölhető)	Miért íratta gyermekét/gyermekeit a szalézi általános iskolába? Azért, mert számunkra fontos a(z) [Oktatás magas színvonala]	Miért íratta gyermekét/gyermekeit a szalézi általános iskolába? Azért, mert számunkra fontos a(z) [Katolikus hit]	Miért íratta gyermekét/gyermekeit a szalézi általános iskolába? Azért, mert számunkra fontos a(z) [Szalézi lelkiség]	Miért íratta gyermekét/gyermekeit a szalézi általános iskolába? Azért, mert számunkra fontos a(z) [Jó elhelyezkedés]	Miért íratta gyermekét/gyermekeit a szalézi általános iskolába? Azért, mert számunkra fontos a(z) [Egyházi intézmény]	Miért íratta gyermekét/gyermekeit a szalézi általános iskolába? Azért, mert számunkra fontos a(z) [Szülői közösség]	Miért íratta gyermekét/gyermekeit a szalézi általános iskolába? Azért, mert számunkra fontos a(z) [Intézmény légköre]	Miért íratta gyermekét/gyermekeit a szalézi általános iskolába? Azért, mert számunkra fontos a(z) [Rendezettség/szervezettség]	Miért íratta gyermekét/gyermekeit a szalézi általános iskolába? Azért, mert számunkra fontos a(z) [Infrastruktúra/felszereltség]	Miért íratta gyermekét/gyermekeit a szalézi általános iskolába? Azért, mert számunkra fontos a(z) [Zeneoktatás]	Miért íratta gyermekét/gyermekeit a szalézi általános iskolába? Azért, mert számunkra fontos a(z) [Tanrend (óraterhelés/különórák/nyelvoktatás)]	Miért íratta gyermekét/gyermekeit a szalézi általános iskolába? Azért, mert számunkra fontos a(z) [Szalézi gimnázium ígérete]	Miért íratta gyermekét/gyermekeit a szalézi általános iskolába? Azért, mert számunkra fontos a(z) [Tantestület]	Miért íratta gyermekét/gyermekeit a szalézi általános iskolába? Azért, mert számunkra fontos a(z) [Konkrét tanár személye]	Miért íratta gyermekét/gyermekeit a szalézi általános iskolába? Azért, mert számunkra fontos a(z) [Úszás oktatás]	Miért íratta gyermekét/gyermekeit a szalézi általános iskolába? Azért, mert számunkra fontos a(z) [Pedagógiai program]	Volt-e egyéb szempont, amiért az iskola mellett döntött?	Mennyire teljesültek az előzetes elvárásai? A várakozásainknak megfelelően teljesült: [Oktatás magas színvonala]	Mennyire teljesültek az előzetes elvárásai? A várakozásainknak megfelelően teljesült: [Katolikus hit]	Mennyire teljesültek az előzetes elvárásai? A várakozásainknak megfelelően teljesült: [Szalézi lelkiség]	Mennyire teljesültek az előzetes elvárásai? A várakozásainknak megfelelően teljesült: [Jó elhelyezkedés]	Mennyire teljesültek az előzetes elvárásai? A várakozásainknak megfelelően teljesült: [Egyházi intézmény]	Mennyire teljesültek az előzetes elvárásai? A várakozásainknak megfelelően teljesült: [Szülői közösség]	Mennyire teljesültek az előzetes elvárásai? A várakozásainknak megfelelően teljesült: [Intézmény légköre]	Mennyire teljesültek az előzetes elvárásai? A várakozásainknak megfelelően teljesült: [Rendezettség/szervezettség]	Mennyire teljesültek az előzetes elvárásai? A várakozásainknak megfelelően teljesült: [Infrastruktúra/felszereltség]	Mennyire teljesültek az előzetes elvárásai? A várakozásainknak megfelelően teljesült: [Zeneoktatás]	Mennyire teljesültek az előzetes elvárásai? A várakozásainknak megfelelően teljesült: [Tanrend (óraterhelés/különórák/nyelvoktatás)]	Mennyire teljesültek az előzetes elvárásai? A várakozásainknak megfelelően teljesült: [Szalézi gimnázium ígérete]	Mennyire teljesültek az előzetes elvárásai? A várakozásainknak megfelelően teljesült: [Tantestület]	Mennyire teljesültek az előzetes elvárásai? A várakozásainknak megfelelően teljesült: [Konkrét tanár személye]	Mennyire teljesültek az előzetes elvárásai? A várakozásainknak megfelelően teljesült: [Úszás oktatás]	Mennyire teljesültek az előzetes elvárásai? A várakozásainknak megfelelően teljesült: [Pedagógiai program]	Terveik szerint 8. osztályig az iskolában marad gyermekük?	Döntésüket mennyiben befolyásolják az iskola által felső tagozaton kínált lehetőségek?	Melyek azok a szempontok, amelyek alapján megfontolná vagy biztosan szeretné gyermekét 8. osztályig az iskolába járatni? Döntésünket jelentősen befolyásolná a(z) [Nyelvoktatás színvonalának javítása]	Melyek azok a szempontok, amelyek alapján megfontolná vagy biztosan szeretné gyermekét 8. osztályig az iskolába járatni? Döntésünket jelentősen befolyásolná a(z) [Matematikaoktatás színvonalának javítása]	Melyek azok a szempontok, amelyek alapján megfontolná vagy biztosan szeretné gyermekét 8. osztályig az iskolába járatni? Döntésünket jelentősen befolyásolná a(z) [Természettudományos tárgyak hatékonyabb oktatása]	Melyek azok a szempontok, amelyek alapján megfontolná vagy biztosan szeretné gyermekét 8. osztályig az iskolába járatni? Döntésünket jelentősen befolyásolná a(z) [Humán tárgyak hatékonyabb oktatása]	Melyek azok a szempontok, amelyek alapján megfontolná vagy biztosan szeretné gyermekét 8. osztályig az iskolába járatni? Döntésünket jelentősen befolyásolná a(z) [Osztályon belüli konfliktusok hatékonyabb kezelése]	Melyek azok a szempontok, amelyek alapján megfontolná vagy biztosan szeretné gyermekét 8. osztályig az iskolába járatni? Döntésünket jelentősen befolyásolná a(z) [Hatékonyabb kommunikáció a szülők és az iskola/tanárok közt]	Melyek azok a szempontok, amelyek alapján megfontolná vagy biztosan szeretné gyermekét 8. osztályig az iskolába járatni? Döntésünket jelentősen befolyásolná a(z) [Több iskolán kívüli, közösséget erősítő program]	Milyen típusú középiskolába szeretné járatni gyermekét az általános iskola után? (több is bejelölhető)	Ha van kisebb gyermeke, tervezi-e a szalézi iskolába íratni?	Van-e olyan gyermeke, aki járt a szalézi általános iskolába, de még általános iskolás korában átment másik oktatási intézménybe?	Melyek azok a szempontok, amelyek miatt gyermekét másik intézménybe vitte? Döntésünket jelentősen befolyásolta a(z) [Nyelvoktatás színvonala]	Melyek azok a szempontok, amelyek miatt gyermekét másik intézménybe vitte? Döntésünket jelentősen befolyásolta a(z) [Matematikaoktatás színvonala]	Melyek azok a szempontok, amelyek miatt gyermekét másik intézménybe vitte? Döntésünket jelentősen befolyásolta a(z) [Természettudományos oktatás színvonala]	Melyek azok a szempontok, amelyek miatt gyermekét másik intézménybe vitte? Döntésünket jelentősen befolyásolta a(z) [Humán oktatás színvonala]	Melyek azok a szempontok, amelyek miatt gyermekét másik intézménybe vitte? Döntésünket jelentősen befolyásolta a(z) [Osztályon belüli konfliktusok kezelése]	Melyek azok a szempontok, amelyek miatt gyermekét másik intézménybe vitte? Döntésünket jelentősen befolyásolta a(z) [Szülők és az iskola/tanárok közti kommunikáció]	Melyek azok a szempontok, amelyek miatt gyermekét másik intézménybe vitte? Döntésünket jelentősen befolyásolta a(z) [Kevés iskolán kívüli, közösséget erősítő program]	Melyek azok a szempontok, amelyek miatt gyermekét másik intézménybe vitte? Döntésünket jelentősen befolyásolta a(z) [Drága menza]	Melyek azok a szempontok, amelyek miatt gyermekét másik intézménybe vitte? Döntésünket jelentősen befolyásolta a(z) [Rossz minőségű menza]	Mi a véleménye az iskolai étkeztetés költségéről?	Mi a véleménye az iskolai étkeztetés minőségéről?	Kérjük, amennyiben bármilyen egyéb észrevétele vagy javaslata van itt röviden foglalja össze!
+2026.05.04. 8:11:49	5-6 osztály	Egyetértek	Egyetértek	Semleges	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Semleges	Semleges	Egyetértek	Semleges	Semleges	Semleges	Semleges		Egyáltalán nem értek egyet	Semleges	Inkább nem értek egyet	Egyetértek	Egyetértek	Semleges	Inkább nem értek egyet	Inkább nem értek egyet	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Semleges	Egyáltalán nem értek egyet	Még nem döntöttem	Egyáltalán nem								Még nem döntöttem/nem tudom	Nem	Nem										Drága	Megfelelő	
+2026.05.04. 8:15:34	1-2 osztály, 3-4 osztály	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Inkább nem értek egyet	Inkább nem értek egyet	Teljesen egyetértek	Semleges	Semleges	Inkább nem értek egyet	Teljesen egyetértek	Egyáltalán nem értek egyet	Egyetértek		Inkább nem értek egyet	Teljesen egyetértek	Egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Inkább nem értek egyet	Inkább nem értek egyet	Semleges	Teljesen egyetértek	Egyetértek	Egyáltalán nem értek egyet	Inkább nem értek egyet	Teljesen egyetértek	Egyáltalán nem értek egyet	Inkább nem értek egyet	Nem	Nagyon fontos szempont	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Semleges	Gimnázium	Nincs kisebb gyermekem	Igen	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Teljesen egyetértek	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Drága	Megfelelő	
+2026.05.04. 8:19:29	1-2 osztály	Egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Egyáltalán nem értek egyet	Teljesen egyetértek	Semleges	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Nagytesó szeretett ide járni.	Egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Semleges	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Igen	Nagyon fontos szempont	Teljesen egyetértek	Egyetértek	Egyetértek	Egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Gimnázium	Nincs kisebb gyermekem	Nem										Megfelelő	Megfelelő	
+2026.05.04. 8:23:24	7-8 osztály	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Semleges	Semleges	Semleges	Teljesen egyetértek	Egyetértek	Semleges	Teljesen egyetértek	Semleges	-	Egyetértek	Egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Inkább nem értek egyet	Semleges	Egyetértek	Semleges	Semleges	Semleges	Egyáltalán nem értek egyet	Semleges	Semleges	Teljesen egyetértek	Egyetértek	Igen	Nem döntően, de kis mértékben szerepet játszik	Semleges	Egyetértek	Egyetértek	Egyetértek	Egyáltalán nem értek egyet	Inkább nem értek egyet	Egyetértek	Gimnázium	Nincs kisebb gyermekem	Nem										Drága	Megfelelő	
+2026.05.04. 8:30:23	3-4 osztály, 5-6 osztály	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Semleges	Egyetértek	Semleges	Egyetértek	Egyetértek	Semleges	Egyetértek		Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Semleges	Egyetértek	Semleges	Egyetértek	Egyetértek	Semleges	Egyetértek	Nem	Nem döntően, de kis mértékben szerepet játszik	Semleges	Semleges	Semleges	Semleges	Egyetértek	Semleges	Semleges	Gimnázium	Igen	Nem										Megfelelő	Megfelelő	
+2026.05.04. 8:36:25	3-4 osztály, 5-6 osztály	Egyetértek	Egyetértek	Semleges	Egyetértek	Egyetértek	Semleges	Semleges	Egyetértek	Inkább nem értek egyet	Semleges	Egyetértek	Egyetértek	Egyetértek	Teljesen egyetértek	Inkább nem értek egyet	Egyetértek		Inkább nem értek egyet	Semleges	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Inkább nem értek egyet	Inkább nem értek egyet	Inkább nem értek egyet	Egyetértek	Egyetértek	Inkább nem értek egyet	Inkább nem értek egyet	Egyetértek	Inkább nem értek egyet	Semleges	Nem	Talán	Inkább nem értek egyet	Inkább nem értek egyet	Inkább nem értek egyet	Egyetértek	Inkább nem értek egyet	Inkább nem értek egyet	Egyetértek	Gimnázium	Nem	Nem										Drága	Nem megfelelő	
+2026.05.04. 8:56:12	5-6 osztály	Inkább nem értek egyet	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Inkább nem értek egyet	Inkább nem értek egyet	Egyáltalán nem értek egyet	Inkább nem értek egyet	Teljesen egyetértek	Egyetértek	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet		Inkább nem értek egyet	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Inkább nem értek egyet	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Semleges	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Még nem döntöttem	Nagyon fontos szempont	Egyetértek	Egyetértek	Inkább nem értek egyet	Inkább nem értek egyet	Egyetértek	Egyetértek	Egyáltalán nem értek egyet	Gimnázium	Nincs kisebb gyermekem	Nem										Drága	Nem megfelelő	szabadszedéses rendszert támogatom az iskolai étkezésben
+2026.05.04. 8:59:00	1-2 osztály	Egyetértek	Teljesen egyetértek	Semleges	Semleges	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Semleges	Egyetértek	Egyetértek	Semleges	Teljesen egyetértek		Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Semleges	Teljesen egyetértek	Egyetértek	Egyetértek	Egyetértek	Semleges	Egyetértek	Egyetértek	Semleges	Egyetértek	Teljesen egyetértek	Semleges	Teljesen egyetértek	Még nem döntöttem	Nagyon fontos szempont	Teljesen egyetértek	Egyetértek	Egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Gimnázium	Igen	Nem										Megfelelő	Nem megfelelő	
+2026.05.04. 9:05:35	5-6 osztály	Semleges	Teljesen egyetértek	Semleges	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Semleges	Egyetértek	Semleges	Semleges	Semleges	Semleges	Egyetértek	Semleges	Inkább nem értek egyet	Semleges		Inkább nem értek egyet	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Inkább nem értek egyet	Semleges	Egyetértek	Egyetértek	Egyetértek	Inkább nem értek egyet	Inkább nem értek egyet	Inkább nem értek egyet	Semleges	Semleges	Nem	Nem döntően, de kis mértékben szerepet játszik	Egyetértek	Semleges	Semleges	Egyetértek	Egyetértek	Teljesen egyetértek	Semleges	Még nem döntöttem/nem tudom	Még nem döntöttem	Nem										Drága	Megfelelő	A szülők és az intézmény közti kommunikációra általánosan jellemző, hogy a szülői jelzésekre, kérdésekre rögtön védekező pozícióból indul a válasz. A szülők többsége valódi kommunikációt szeretne, nem támadólag, hanem segítségkérés végett fordul a vezetőséghez. Ezen az alapálláson érdemes lenne változtatni. Mi, szülők valóban hálásak vagyunk a vezetőség és a tanárok, az egyéb munkatársak mindennapi munkájáért, valódi jelenlétükért. A múlt hosszas magyarázata helyett fontosabbnak érezzük a jövőbe tekintő, megfontolt, értő fülű meghallgatást. A fejlődés és a közös előre haladás feltétele egy jó párbeszéd. Az Úr vezesse minden lépésünket!
+2026.05.04. 9:33:51	7-8 osztály	Teljesen egyetértek	Egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Semleges	Egyetértek	Egyetértek	Egyáltalán nem értek egyet	Semleges	Inkább nem értek egyet	Semleges	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Semleges	Egyházi iskola 	Egyetértek	Egyáltalán nem értek egyet	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Semleges	Egyetértek	Egyetértek	Egyetértek	Egyáltalán nem értek egyet	Egyetértek	Egyetértek	Egyetértek	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Egyetértek	Igen	Egyáltalán nem								Gimnázium, Technikum/Szakgimnázium	Nincs kisebb gyermekem	Nem										Megfelelő	Kiváló	
+2026.05.04. 9:36:43	3-4 osztály	Egyáltalán nem értek egyet	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Semleges	Egyetértek	Inkább nem értek egyet	Inkább nem értek egyet	Egyetértek	Semleges	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Egyetértek	Semleges		Egyáltalán nem értek egyet	Egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Semleges	Egyáltalán nem értek egyet	Semleges	Egyetértek	Semleges	Egyáltalán nem értek egyet	Egyetértek	Teljesen egyetértek	Egyetértek	Semleges	Még nem döntöttem	Nagyon fontos szempont	Egyetértek	Semleges	Teljesen egyetértek	Semleges	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Gimnázium	Igen	Igen	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Egyáltalán nem értek egyet	Egyetértek	Megfelelő	Nem megfelelő	
+2026.05.04. 9:47:06	3-4 osztály, 5-6 osztály	Teljesen egyetértek	Egyetértek	Semleges	Egyetértek	Semleges	Teljesen egyetértek	Teljesen egyetértek	Semleges	Egyetértek	Semleges	Semleges	Semleges	Egyetértek	Teljesen egyetértek	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet		Inkább nem értek egyet	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Teljesen egyetértek	Egyáltalán nem értek egyet	Semleges	Semleges	Semleges	Semleges	Semleges	Inkább nem értek egyet	Teljesen egyetértek	Semleges	Semleges	Nem	Nagyon fontos szempont	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Semleges	Egyetértek	Semleges	Gimnázium	Nincs kisebb gyermekem	Igen	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Semleges	Semleges	Semleges	Semleges	Semleges	Olcsó	Nem megfelelő	
+2026.05.04. 10:04:48	7-8 osztály	Egyetértek	Egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Semleges	Semleges	Semleges	Egyetértek	Semleges	Teljesen egyetértek	Egyetértek		Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Semleges	Semleges	Semleges	Egyetértek	Semleges	Teljesen egyetértek	Egyetértek	Igen	Egyáltalán nem								Gimnázium	Nincs kisebb gyermekem	Nem										Megfelelő	Megfelelő	
+2026.05.04. 10:33:34	1-2 osztály	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Inkább nem értek egyet	Inkább nem értek egyet	Teljesen egyetértek	Semleges	Semleges	Egyáltalán nem értek egyet	Teljesen egyetértek	Az okoseszközök használatának korlátozása nagyon fontos szempont volt számunkra.	Semleges	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Egyetértek	Inkább nem értek egyet	Egyáltalán nem értek egyet	Semleges	Semleges	Egyáltalán nem értek egyet	Egyetértek	Teljesen egyetértek	Egyáltalán nem értek egyet	Teljesen egyetértek	Nem	Kizárólag ez határozza meg	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Semleges	Semleges	Semleges	Gimnázium	Igen	Nem										Drága	Nem megfelelő	
+2026.05.04. 10:42:40	1-2 osztály	Egyetértek	Teljesen egyetértek	Semleges	Teljesen egyetértek	Teljesen egyetértek	Semleges	Semleges	Semleges	Semleges	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Semleges	Inkább nem értek egyet	Semleges	nem volt	Semleges	Egyetértek	Semleges	Teljesen egyetértek	Teljesen egyetértek	Semleges	Semleges	Semleges	Semleges	Egyetértek	Egyetértek	Egyáltalán nem értek egyet	Semleges	Semleges	Semleges	Semleges	Igen	Talán	Teljesen egyetértek	Teljesen egyetértek	Semleges	Egyetértek	Semleges	Semleges	Semleges	Gimnázium	Igen	Nem										Drága	Megfelelő	
+2026.05.04. 10:50:11	1-2 osztály	Semleges	Egyetértek	Egyetértek	Semleges	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Semleges	Inkább nem értek egyet	Inkább nem értek egyet	Egyetértek	Inkább nem értek egyet	Teljesen egyetértek	Egyetértek	Semleges	Egyetértek		Egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Semleges	Semleges	Semleges	Semleges	Semleges	Egyetértek	Egyetértek	Semleges	Egyetértek	Nem	Talán	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Inkább nem értek egyet	Semleges	Egyetértek	Egyetértek	Gimnázium	Igen	Nem										Olcsó	Nem megfelelő	
+2026.05.04. 11:15:41	1-2 osztály	Egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek		Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Nem	Nem döntően, de kis mértékben szerepet játszik	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Gimnázium	Igen	Nem										Megfelelő	Megfelelő	
+2026.05.04. 11:25:43	3-4 osztály	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Egyetértek	Semleges	Egyetértek	Semleges	Semleges	Egyetértek	Közel van a kerületi rendőr kapitányság	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Semleges	Teljesen egyetértek	Egyetértek	Semleges	Egyetértek	Még nem döntöttem	Talán	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Egyetértek	Gimnázium	Nincs kisebb gyermekem	Nem										Drága	Megfelelő	
+2026.05.04. 11:43:20	1-2 osztály, 5-6 osztály, 7-8 osztály	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyáltalán nem értek egyet	Egyetértek	Egyetértek	Egyetértek	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Egyetértek	Egyáltalán nem értek egyet	Semleges	Teljesen egyetértek	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet		Inkább nem értek egyet	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Semleges	Semleges	Egyáltalán nem értek egyet	Inkább nem értek egyet	Semleges	Semleges	Semleges	Semleges	Semleges	Semleges	Semleges	Még nem döntöttem	Nagyon fontos szempont	Teljesen egyetértek	Teljesen egyetértek	Semleges	Semleges	Teljesen egyetértek	Teljesen egyetértek	Semleges	Gimnázium	Nincs kisebb gyermekem	Igen, de később visszahoztam.										Drága	Nem megfelelő	
+2026.05.04. 12:05:20	3-4 osztály, 5-6 osztály	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Egyetértek	Semleges	Teljesen egyetértek	Egyetértek	Inkább nem értek egyet	Inkább nem értek egyet	Semleges		Semleges	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Egyetértek	Semleges	Semleges	Teljesen egyetértek	Semleges	Egyáltalán nem értek egyet	Egyetértek	Inkább nem értek egyet	Egyetértek	Egyetértek	Még nem döntöttem	Nagyon fontos szempont	Egyetértek	Teljesen egyetértek	Semleges	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Gimnázium	Nincs kisebb gyermekem	Nem										Drága	Nem megfelelő	
+2026.05.04. 12:31:12	1-2 osztály	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Semleges	Egyetértek	Semleges	Egyetértek	Semleges	Semleges	Egyetértek		Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Egyetértek	Semleges	Semleges	Semleges	Semleges	Egyetértek	Semleges	Semleges	Egyetértek	Még nem döntöttem	Nagyon fontos szempont	Egyetértek	Egyetértek	Teljesen egyetértek	Egyetértek	Semleges	Teljesen egyetértek	Semleges	Gimnázium	Igen	Nem										Drága	Megfelelő	
+2026.05.04. 12:50:19	5-6 osztály	Egyetértek	Teljesen egyetértek	Semleges	Egyetértek	Teljesen egyetértek	Semleges	Egyetértek	Egyetértek	Semleges	Teljesen egyetértek	Egyetértek	Egyetértek	Egyetértek	Teljesen egyetértek	Inkább nem értek egyet	Semleges	Az iskola korábbi hírneve, jó tanulmányi eredmények (7 évvel korábbi kompetenciák alapján), 	Inkább nem értek egyet	Egyetértek	Egyetértek	Egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Semleges	Inkább nem értek egyet	Egyetértek	Inkább nem értek egyet	Egyáltalán nem értek egyet	Egyetértek	Teljesen egyetértek	Semleges	Semleges	Nem	Nagyon fontos szempont	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Egyetértek	Semleges	Semleges	Gimnázium	Nincs kisebb gyermekem	Igen	Egyetértek	Teljesen egyetértek	Egyetértek	Egyáltalán nem értek egyet	Teljesen egyetértek	Egyetértek	Egyetértek	Semleges	Egyetértek	Drága	Nem megfelelő	
+2026.05.04. 13:27:34	1-2 osztály	Semleges	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Semleges	Semleges	Semleges	Semleges	Egyetértek	Egyetértek	Semleges	Semleges	Egyetértek	Semleges	Semleges	A férjem is, én is ide jártunk.	Egyetértek	Egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Semleges	Semleges	Inkább nem értek egyet	Semleges	Semleges	Semleges	Semleges	Egyetértek	Teljesen egyetértek	Semleges	Semleges	Még nem döntöttem	Nagyon fontos szempont	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Gimnázium	Még nem döntöttem	Nem										Drága	Megfelelő	Sok édességet, péksüteményt kapnak, jó lenne egészségesebb alternatívákat kitalálni.
+2026.05.04. 13:30:37	5-6 osztály, 7-8 osztály	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyáltalán nem értek egyet	Inkább nem értek egyet	Teljesen egyetértek	Semleges	Semleges	Semleges	Semleges	A Gimnázium ígérete eléggé fontos szempont volt.	Semleges	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Semleges	Semleges	Egyáltalán nem értek egyet	Inkább nem értek egyet	Egyáltalán nem értek egyet	Semleges	Semleges	Semleges	Semleges	Még nem döntöttem	Nagyon fontos szempont	Teljesen egyetértek	Teljesen egyetértek	Semleges	Semleges	Egyetértek	Semleges	Egyáltalán nem értek egyet	Gimnázium	Nincs kisebb gyermekem	Nem										Megfelelő	Megfelelő	
+2026.05.04. 14:15:23	3-4 osztály, 5-6 osztály	Egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Semleges	Egyetértek	Egyetértek	Egyetértek	Semleges	Semleges	Egyetértek	Nem	Egyetértek	Egyetértek	Semleges	Egyetértek	Egyetértek	Egyetértek	Semleges	Semleges	Semleges	Semleges	Semleges	Inkább nem értek egyet	Semleges	Semleges	Semleges	Semleges	Igen	Nem döntően, de kis mértékben szerepet játszik	Teljesen egyetértek	Egyetértek	Egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Gimnázium	Nincs kisebb gyermekem	Nem										Megfelelő	Megfelelő	A hatékonyabb kommunikációs lehetőségek sok esetben segíthetnék azt, hogy tanár, család (szülők) egy irányba nézzenek az intézménybe járó gyermek érdekében. Ha a félévenkénti fogadóórák 10 percét hosszabb időre lehetne növelni már önmagában sokat jelentene. Köszönjük a véleménynyílvánítási lehetőséget!
+2026.05.04. 16:12:27	3-4 osztály, 5-6 osztály	Semleges	Teljesen egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Inkább nem értek egyet	Inkább nem értek egyet	Inkább nem értek egyet	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Teljesen egyetértek	Semleges	Teljesen egyetértek	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet		Semleges	Egyetértek	Semleges	Egyetértek	Egyetértek	Egyetértek	Semleges	Inkább nem értek egyet	Semleges	Semleges	Inkább nem értek egyet	Egyáltalán nem értek egyet	Egyetértek	Teljesen egyetértek	Egyáltalán nem értek egyet	Semleges	Még nem döntöttem	Nagyon fontos szempont	Semleges	Teljesen egyetértek	Egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Gimnázium	Nincs kisebb gyermekem	Igen	Semleges	Semleges	Semleges	Semleges	Teljesen egyetértek	Semleges	Semleges	Semleges	Semleges	Megfelelő	Nem megfelelő	
+2026.05.04. 16:32:38	1-2 osztály	Teljesen egyetértek	Egyetértek	Semleges	Egyetértek	Egyáltalán nem értek egyet	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Semleges	Teljesen egyetértek	Egyáltalán nem értek egyet	Teljesen egyetértek	Semleges	Teljesen egyetértek	Teljesen egyetértek	Jó tapasztalat nagyobb gyermekeknél. Körzetes iskolával való elégedetlenség.	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Semleges	Teljesen egyetértek	Egyetértek	Egyetértek	Semleges	Inkább nem értek egyet	Semleges	Egyetértek	Teljesen egyetértek	Egyáltalán nem értek egyet	Egyetértek	Nem	Talán	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Semleges	Gimnázium	Igen	Igen	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Semleges	Teljesen egyetértek	Egyetértek	Drága	Nem megfelelő	A nagyobb gyermekeim a KSZKI szupermenzán étkeznek. Nagyon meg vagyok elégedve, kiváló a minőség és jó az ára. Nem lehetne erre váltani? Nem értem itt miért ennyire drága az étkezés, mikor nem túl jó a minősége. Megfontolandó lenne sürgősen szolgáltatót váltani, már csak az ára miatt is (nagycsaládos árat fizetünk!).
+2026.05.04. 17:01:52	3-4 osztály	Semleges	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Semleges	Egyetértek	Egyetértek	Semleges	Semleges	Egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Semleges	Semleges	Nem 	Inkább nem értek egyet	Egyetértek	Teljesen egyetértek	Egyetértek	Semleges	Inkább nem értek egyet	Inkább nem értek egyet	Semleges	Semleges	Semleges	Egyetértek	Egyáltalán nem értek egyet	Semleges	Egyáltalán nem értek egyet	Semleges	Semleges	Nem	Nagyon fontos szempont	Egyetértek	Egyetértek	Semleges	Semleges	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Gimnázium	Nincs kisebb gyermekem	Igen	Semleges	Egyetértek	Semleges	Semleges	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Semleges	Semleges	Megfelelő	Megfelelő	Màr nincs több mondanivalóm. 
+2026.05.04. 17:15:37	3-4 osztály, 5-6 osztály	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Semleges	Semleges	Egyetértek	Egyetértek	Inkább nem értek egyet	Semleges		Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Semleges	Egyetértek	Semleges	Semleges	Semleges	Egyetértek	Semleges	Semleges	Igen	Talán	Semleges	Egyetértek	Egyetértek	Egyetértek	Egyáltalán nem értek egyet	Egyetértek	Semleges	Gimnázium, Technikum/Szakgimnázium	Nincs kisebb gyermekem	Nem										Drága		Felső tagozatosoknak is lenne kötelező napközi!
+2026.05.04. 17:17:16	5-6 osztály	Egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Semleges	Egyetértek	Egyetértek	Egyetértek	Semleges	Egyetértek	Egyetértek		Egyetértek	Egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Semleges	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Igen	Talán	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Egyetértek	Gimnázium, Technikum/Szakgimnázium	Nincs kisebb gyermekem	Nem										Drága	Nem megfelelő	
+2026.05.04. 18:25:52	7-8 osztály	Egyetértek	Egyetértek	Semleges	Semleges	Semleges	Semleges	Egyetértek	Egyetértek	Semleges	Semleges	Egyetértek	Semleges	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek		Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Egyetértek	Teljesen egyetértek	Egyetértek	Semleges	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Igen	Nem döntően, de kis mértékben szerepet játszik	Egyetértek	Semleges	Semleges	Semleges	Egyetértek	Semleges	Semleges	Gimnázium, Még nem döntöttem/nem tudom	Nincs kisebb gyermekem	Nem										Megfelelő	Megfelelő	
+2026.05.04. 18:32:11	5-6 osztály	Egyetértek	Semleges	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Semleges	Egyetértek	Egyetértek	Semleges	Teljesen egyetértek	Semleges	Semleges	Egyetértek	Egyetértek	Egyetértek	Egyetértek		Semleges	Semleges	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Semleges	Egyetértek	Egyetértek	Semleges	Teljesen egyetértek	Semleges	Inkább nem értek egyet	Semleges	Semleges	Teljesen egyetértek	Egyetértek	Nem	Nagyon fontos szempont	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Gimnázium	Igen	Igen	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Semleges	Semleges	Megfelelő	Megfelelő	
+2026.05.04. 18:58:49	1-2 osztály	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Inkább nem értek egyet	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Inkább nem értek egyet	Egyetértek	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Egyetértek	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	A nagytestvérek nagyon klassz iskolába jártak ide! De most sem a családok nem keresztények, nem szalézi lelkületűek, sem a tanárok jó része. A felsős oktatási színvonalról nem sok jót hallok. Az osztályban azt látom, nagyon nagy a gyerekek hozott tudása közti különbség, a tanítók ezzel nem tudnak mit kezdeni. (Pedig a kis létszám mellett talán lehetne.)	Egyáltalán nem értek egyet	Egyetértek	Semleges	Semleges	Inkább nem értek egyet	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Semleges	Egyetértek	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Semleges	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Nem	Talán	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Semleges	Gimnázium	Nincs kisebb gyermekem	Igen	Semleges	Semleges	Semleges	Semleges	Semleges	Semleges	Semleges	Semleges	Semleges	Drága	Megfelelő	Csak akkor lesz jó a menza, ha helyben főznek.
+2026.05.04. 19:22:19	7-8 osztály	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Semleges	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Semleges	Egyetértek	Semleges	Teljesen egyetértek	Semleges	Teljesen egyetértek	Egyetértek	idősebb gyermekeink is ide jártak	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Semleges	Egyetértek	Egyetértek	Egyetértek	Semleges	Semleges	Semleges	Egyetértek	Semleges	Teljesen egyetértek	Egyetértek	Igen	Egyáltalán nem								Gimnázium	Nincs kisebb gyermekem	Igen	Semleges	Semleges	Semleges	Semleges	Egyetértek	Teljesen egyetértek	Semleges	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Megfelelő	Megfelelő	-
+2026.05.04. 19:49:16	1-2 osztály	Semleges	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Semleges	Teljesen egyetértek	Egyetértek	Egyetértek	Inkább nem értek egyet	Inkább nem értek egyet	Inkább nem értek egyet	Inkább nem értek egyet	Egyetértek	Inkább nem értek egyet	Inkább nem értek egyet		Semleges	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Semleges	Teljesen egyetértek	Semleges	Semleges	Semleges	Semleges	Semleges	Semleges	Inkább nem értek egyet	Semleges	Semleges	Még nem döntöttem	Talán	Egyetértek	Semleges	Semleges	Semleges	Teljesen egyetértek	Semleges	Semleges	Gimnázium	Nincs kisebb gyermekem	Nem										Drága	Megfelelő	
+2026.05.05. 8:58:14	1-2 osztály, 3-4 osztály	Teljesen egyetértek	Semleges	Egyetértek	Teljesen egyetértek	Inkább nem értek egyet	Semleges	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Semleges	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Alsós tanár a leendő évfolyamon. ( Berni néni és Ildi néni ) 	Egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Inkább nem értek egyet	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Inkább nem értek egyet	Teljesen egyetértek	Semleges	Egyáltalán nem értek egyet	Semleges	Teljesen egyetértek	Egyetértek	Egyetértek	Még nem döntöttem	Nagyon fontos szempont	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Inkább nem értek egyet	Még nem döntöttem/nem tudom	Nincs kisebb gyermekem	Nem										Drága	Nem megfelelő	A menzai étkezés drága és rossz. Több zöldség és fehérje, kevesebb sós péksütemény kellene uzsonnára. Ebédet nem tudom megítélni. 
+2026.05.05. 11:15:49	7-8 osztály	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Teljesen egyetértek	Egyetértek	Semleges	Inkább nem értek egyet	Egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Nem	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Inkább nem értek egyet	Egyetértek	Semleges	Semleges	Egyetértek	Egyetértek	Egyáltalán nem értek egyet	Egyetértek	Egyetértek	Teljesen egyetértek	Semleges	Igen	Talán	Egyetértek	Egyetértek	Semleges	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Inkább nem értek egyet	Gimnázium	Nincs kisebb gyermekem	Nem										Drága	Megfelelő	
+2026.05.05. 18:47:13	1-2 osztály	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Semleges	Egyetértek	Egyetértek	Egyetértek	Semleges	Egyetértek	Semleges	Egyetértek	Semleges	Egyetértek	Teljesen egyetértek		Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Semleges	Teljesen egyetértek	Semleges	Egyetértek	Teljesen egyetértek	Semleges	Teljesen egyetértek	Még nem döntöttem		Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Gimnázium	Nincs kisebb gyermekem	Nem										Drága	Nem megfelelő	
+2026.05.05. 21:08:48	5-6 osztály	Egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Semleges	Egyáltalán nem értek egyet	Semleges	Semleges	Egyáltalán nem értek egyet	Semleges		Egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Semleges	Egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Még nem döntöttem	Nem döntően, de kis mértékben szerepet játszik	Semleges	Semleges	Semleges	Semleges	Teljesen egyetértek	Semleges	Semleges	Gimnázium	Még nem döntöttem	Nem										Megfelelő	Megfelelő	
+2026.05.05. 21:43:30	1-2 osztály	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Semleges	Egyetértek	Semleges	Egyetértek	Teljesen egyetértek	Semleges	Egyetértek		Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Inkább nem értek egyet	Inkább nem értek egyet	Semleges	Inkább nem értek egyet	Semleges	Inkább nem értek egyet	Teljesen egyetértek	Semleges	Egyetértek	Nem	Nagyon fontos szempont	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Semleges	Gimnázium	Igen	Nem										Drága	Megfelelő	
+2026.05.05. 22:38:59	3-4 osztály	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Nem	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Még nem döntöttem	Nagyon fontos szempont	Teljesen egyetértek	Semleges	Semleges	Egyetértek	Egyáltalán nem értek egyet	Semleges	Semleges	Gimnázium	Igen	Nem										Megfelelő	Megfelelő	
+2026.05.06. 8:09:29	3-4 osztály, 5-6 osztály	Egyetértek	Semleges	Egyetértek	Teljesen egyetértek	Semleges	Semleges	Teljesen egyetértek	Egyetértek	Semleges	Egyetértek	Semleges	Inkább nem értek egyet	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Semleges		Egyetértek	Semleges	Egyetértek	Teljesen egyetértek	Semleges	Egyetértek	Egyetértek	Egyetértek	Semleges	Teljesen egyetértek	Semleges	Semleges	Egyetértek	Egyetértek	Teljesen egyetértek	Semleges	Még nem döntöttem	Nagyon fontos szempont	Teljesen egyetértek	Teljesen egyetértek	Semleges	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Gimnázium	Nincs kisebb gyermekem	Nem										Megfelelő	Megfelelő	
+2026.05.06. 8:57:34	1-2 osztály	Egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Egyetértek	Semleges	Egyetértek	Egyetértek	Semleges	Inkább nem értek egyet	Inkább nem értek egyet	Inkább nem értek egyet	Semleges	Teljesen egyetértek	Inkább nem értek egyet	Semleges		Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Semleges	Egyetértek	Nem	Nem döntően, de kis mértékben szerepet játszik	Semleges	Teljesen egyetértek	Teljesen egyetértek	Semleges	Inkább nem értek egyet	Semleges	Semleges	Gimnázium	Nincs kisebb gyermekem	Nem										Drága	Megfelelő	
+2026.05.06. 18:14:25	5-6 osztály	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Semleges	Egyetértek	Más nem 	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Inkább nem értek egyet	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Igen	Nagyon fontos szempont	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Gimnázium	Még nem döntöttem	Nem										Drága	Megfelelő	
+2026.05.06. 19:26:16	5-6 osztály	Teljesen egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Semleges	Teljesen egyetértek	Teljesen egyetértek	Semleges	Egyáltalán nem értek egyet	Semleges	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Semleges	Teljesen egyetértek		Inkább nem értek egyet	Egyetértek	Egyetértek	Teljesen egyetértek	Egyetértek	Egyáltalán nem értek egyet	Semleges	Semleges	Egyetértek	Egyáltalán nem értek egyet	Semleges	Egyáltalán nem értek egyet	Semleges	Semleges	Egyáltalán nem értek egyet	Semleges	Igen	Egyáltalán nem								Gimnázium	Nincs kisebb gyermekem	Nem										Megfelelő	Megfelelő	
+2026.05.06. 21:54:31	3-4 osztály, 5-6 osztály	Egyetértek	Egyetértek	Semleges	Semleges	Egyetértek	Semleges	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Inkább nem értek egyet	Semleges	Semleges	Semleges	Egyáltalán nem értek egyet	Semleges	Semleges	Nem körzetes iskola	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Semleges	Egyetértek	Egyetértek	Egyetértek	Semleges	Semleges	Inkább nem értek egyet	Egyetértek	Semleges	Semleges	Semleges	Igen	Talán	Semleges	Semleges	Semleges	Semleges	Semleges	Semleges	Semleges	Még nem döntöttem/nem tudom	Nincs kisebb gyermekem	Nem										Drága	Megfelelő	A kiosztott étel mennyisége ingadozó, attól is függ, hol ül a gyerek,mire hozzá érnek mennyi marad . Olyan is előfordul, hogy látják a gyerekek, hogy maradt az osztály ételmennyiségéből repeta, mégsem kapják meg . 
+2026.05.07. 11:27:16	7-8 osztály	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Semleges	Semleges	Teljesen egyetértek	nem	Inkább nem értek egyet	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Semleges	Egyetértek	Egyetértek	Teljesen egyetértek	Egyetértek	Egyáltalán nem értek egyet	Semleges	Egyetértek	Teljesen egyetértek	Egyetértek	Igen	Kizárólag ez határozza meg	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Semleges	Gimnázium	Nem	Nem										Megfelelő	Nem megfelelő	
+2026.05.07. 13:00:20	1-2 osztály, 3-4 osztály	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Semleges	Semleges	Semleges	Semleges	Semleges	Egyetértek	Semleges	Semleges	Semleges	Inkább nem értek egyet		Semleges	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Semleges	Inkább nem értek egyet	Inkább nem értek egyet	Semleges	Teljesen egyetértek	Inkább nem értek egyet	Egyáltalán nem értek egyet	Semleges	Semleges	Inkább nem értek egyet	Semleges	Nem	Nagyon fontos szempont	Teljesen egyetértek	Teljesen egyetértek	Semleges	Semleges	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Gimnázium	Nem	Igen	Teljesen egyetértek	Teljesen egyetértek	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Teljesen egyetértek	Egyetértek	Egyetértek	Semleges	Semleges	Drága	Nem megfelelő	A döntéseket (kisebb testvér beiratása, felső tagozatban maradás) befolyásolja a lehetséges osztályfőnök személye, sok múlik a közösségteremtésén, a gyerekekhez való hozzáállásán. Hiába minden iskolai körülmény, ha a tanító vagy a tanár fásult/kiégett/nem tud fegyelmezni/szétesik a közösség alatta. Kevás tanárból lehet válogatni, de a vezető személye legfontosabb szempont.
+2026.05.07. 13:14:55	3-4 osztály	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Semleges	Semleges		Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyáltalán nem értek egyet	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Még nem döntöttem	Nagyon fontos szempont	Teljesen egyetértek	Teljesen egyetértek	Semleges	Semleges	Teljesen egyetértek	Teljesen egyetértek	Semleges	Gimnázium	Igen	Igen	Egyetértek	Egyetértek	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Teljesen egyetértek	Egyetértek	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Megfelelő	Megfelelő	
+2026.05.07. 14:18:08	1-2 osztály	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Semleges	Egyetértek	Teljesen egyetértek	Semleges	Semleges	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Semleges	Egyetértek		Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Semleges	Egyetértek	Egyetértek	Egyetértek	Semleges	Semleges	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Igen	Nagyon fontos szempont	Egyetértek	Inkább nem értek egyet	Semleges	Egyetértek	Semleges	Egyetértek	Egyetértek	Gimnázium	Nincs kisebb gyermekem	Nem										Drága	Nem megfelelő	
+2026.05.07. 17:02:17	1-2 osztály	Semleges	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Semleges	Teljesen egyetértek	Semleges	Semleges	Egyetértek	Teljesen egyetértek	Egyáltalán nem értek egyet	Egyetértek	földrajzi elhelyezkedés, de leginkább a szalézi lelkiség, emberközpontúság, a szülők és a tanári kar közötti élő kapcsolat	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Semleges	Egyetértek	Teljesen egyetértek	Semleges	Teljesen egyetértek	Még nem döntöttem	Nagyon fontos szempont	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Egyetértek	Teljesen egyetértek	Gimnázium	Igen	Nem										Megfelelő	Megfelelő	A minőségről nem tudok nyilatkozni, valószínűleg megfelelő. Viszont nincs információm arról ,hogy pontosan milyen ebédadagokat kapnak a gyerekek, illetve például az uzsonna és az ebéd adagja egy első osztályos számára mennyiben  tér el pl a felsősök adagjától? Az újfajta menza (szabadszedéses menzát semmiképpen nem  támogatom)
+2026.05.07. 17:12:06	5-6 osztály	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Semleges	Teljesen egyetértek	Teljesen egyetértek	Semleges	Semleges	Semleges	Teljesen egyetértek	Teljesen egyetértek	Semleges	Semleges	Semleges		Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Igen	Nem döntően, de kis mértékben szerepet játszik	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Még nem döntöttem/nem tudom	Nincs kisebb gyermekem	Nem										Megfelelő	Megfelelő	
+2026.05.07. 17:43:12	3-4 osztály, 5-6 osztály	Teljesen egyetértek	Semleges	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Semleges	Teljesen egyetértek	Semleges	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Akkor még jó híre volt.	Semleges	Semleges	Semleges	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Inkább nem értek egyet	Inkább nem értek egyet	Inkább nem értek egyet	Teljesen egyetértek	Inkább nem értek egyet	Egyáltalán nem értek egyet	Inkább nem értek egyet	Inkább nem értek egyet	Teljesen egyetértek	Egyáltalán nem értek egyet	Még nem döntöttem	Nagyon fontos szempont	Teljesen egyetértek	Semleges	Semleges	Semleges	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Gimnázium, Technikum/Szakgimnázium	Nincs kisebb gyermekem	Nem										Drága	Nem megfelelő	A tabárok közül vannak akik szívből és maximális tudásukkal próbálják a gyerekeket terelgetni. Ezért nagyon hálásak vagyunk. Azonban általánoságban a gyerekek konfliktusait és a bántásokat sem az iskola vezetése,  sem a tanárok többsége nem tujda kezelni. Következetlenség és bizalmatlanság övezi a gyerekek és tanárok kapcsolatát.
+2026.05.07. 17:48:35	3-4 osztály	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Semleges	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Semleges	Semleges	Egyetértek	Egyetértek	Semleges	Semleges	Semleges		Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Semleges	Egyetértek	Egyetértek	Semleges	Semleges	Semleges	Semleges	Egyetértek	Semleges	Semleges	Semleges	Igen	Egyáltalán nem								Gimnázium	Nincs kisebb gyermekem	Nem										Megfelelő	Megfelelő	
+2026.05.07. 18:34:20	3-4 osztály	Inkább nem értek egyet	Teljesen egyetértek	Egyetértek	Semleges	Egyetértek	Egyetértek	Egyetértek	Inkább nem értek egyet	Inkább nem értek egyet	Semleges	Inkább nem értek egyet	Egyetértek	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Semleges	Semleges		Inkább nem értek egyet	Egyetértek	Inkább nem értek egyet	Egyetértek	Egyetértek	Semleges	Inkább nem értek egyet	Inkább nem értek egyet	Semleges	Egyetértek	Inkább nem értek egyet	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Még nem döntöttem	Nagyon fontos szempont	Egyetértek	Teljesen egyetértek	Semleges	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Gimnázium	Nem	Igen	Inkább nem értek egyet	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyáltalán nem értek egyet	Teljesen egyetértek	Egyáltalán nem értek egyet	Drága	Megfelelő	A kommunikáció szét van esve, külön kommunikál a vezetőség, az osztályfőnökök vagy úgy szervezik meg a feladatokat, amihez szülő is kell, hogy előzetesen nem tájékoztatja a szülőket, az információt elküldte nincs egy összefüggő megfogalmazás, hiányos az e-mail, találgat a szülő. Ezenkívül nem a gyermek az első, hanem az intézmény érdekei, illetve régen letért az intézmény a Don Bosco példájáról. A nagy környezetet figyelembevéve ez az egyedüli iskola, aki óvodás szinten használja az E-Kréta-t, amit nem tudom, hogy szándékosan vagy a pedagógusok hiányos tudása miatt van (pld. Bizonyos feladatokra 50%-os jegyet kapnak, amit nem írnak be, mert maja kell mellé még egy 50%-os jegy, de nem lesz belőle semmi. Erre van lehetőség az E-Krétába, stb). Érdemes lenne újra gondolni, felmérni, hogy bizony elmaradott a Kréta használata és a pedagógusokat meg kell tanítani a használatára (tudom, hogy van aki kitűnően használja) Az intézmény udvara kicsi, lényegében csak arra jó, hogy szünetben levegőt vegyenek ott, de másra nem alkalmas. Még rengeteg gond van, de a vezetőség csak látszólag nyitott a kommunikációra, nem meghallgat, hanem egy huszár vágással lezárja. Az SZMK -t komolyabban kell megszervezni, erre érdemes lenne elmenni jól működő SZMK-hoz megbeszélésre és elmondják, hogy kellene működnie, nem pedig ahogy az iskola diktálja. Bőven van mit tenni, ha az iskola is szeretne, ha nem, elmegy a közösség nagy része. 
+2026.05.07. 18:44:07	1-2 osztály, 3-4 osztály	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Egyetértek	Semleges	Semleges	Egyetértek	Semleges	Semleges	Semleges	Semleges	Teljesen egyetértek	Ezt az iskolát ismerjük és szeretjük már 18 éve. 6 nagyobb testvérük is ide járt. Később azt fogalmazták meg, hogy nagyon jó iskola volt. Szerettek ide járni.	Egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Inkább nem értek egyet	Semleges	Semleges	Semleges	Semleges	Igen	Egyáltalán nem								Gimnázium, Technikum/Szakgimnázium	Nincs kisebb gyermekem	Nem										Megfelelő	Nem megfelelő	
+2026.05.07. 21:01:33	1-2 osztály	Semleges	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Semleges	Semleges	Semleges	Semleges	Egyetértek	Semleges	Semleges	Semleges	Egyetértek	Inkább nem értek egyet	Inkább nem értek egyet		Semleges	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Teljesen egyetértek	Egyetértek	Semleges	Semleges	Semleges	Semleges	Semleges	Még nem döntöttem	Nagyon fontos szempont	Teljesen egyetértek	Semleges	Semleges	Semleges	Semleges	Egyetértek	Egyetértek	Technikum/Szakgimnázium	Nincs kisebb gyermekem	Nem										Drága	Megfelelő	
+2026.05.08. 10:45:42	5-6 osztály	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Semleges	Egyetértek	Egyetértek	Teljesen egyetértek	Egyetértek		Semleges	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Semleges	Egyetértek	Egyetértek	Egyetértek	Teljesen egyetértek	Egyetértek	Igen	Talán	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Technikum/Szakgimnázium	Nincs kisebb gyermekem	Nem										Drága	Nem megfelelő	
+2026.05.09. 9:48:46	1-2 osztály, 3-4 osztály	Teljesen egyetértek	Egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Semleges	Teljesen egyetértek	Egyetértek	Egyetértek	Teljesen egyetértek		Teljesen egyetértek	Egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Semleges	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Igen	Nagyon fontos szempont	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Semleges	Gimnázium	Nincs kisebb gyermekem	Nem										Megfelelő	Megfelelő	
+2026.05.11. 8:38:56	5-6 osztály	Inkább nem értek egyet	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Inkább nem értek egyet	Egyetértek	Semleges	Semleges	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Inkább nem értek egyet	Egyetértek	Semleges		Semleges	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Inkább nem értek egyet	Semleges	Inkább nem értek egyet	Egyetértek	Egyetértek	Egyetértek	Egyáltalán nem értek egyet	Egyetértek	Inkább nem értek egyet	Egyetértek	Egyetértek	Még nem döntöttem	Nagyon fontos szempont	Teljesen egyetértek	Egyetértek	Egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Gimnázium	Igen	Nem										Drága	Nem megfelelő	
+2026.05.11. 16:21:04	5-6 osztály	Semleges	Teljesen egyetértek	Teljesen egyetértek	Semleges	Teljesen egyetértek	Semleges	Teljesen egyetértek	Semleges	Semleges	Teljesen egyetértek	Semleges	Semleges	Semleges	Teljesen egyetértek	Semleges	Teljesen egyetértek	Nem	Semleges	Teljesen egyetértek	Teljesen egyetértek	Semleges	Teljesen egyetértek	Semleges	Semleges	Semleges	Semleges	Teljesen egyetértek	Semleges	Semleges	Semleges	Egyetértek	Inkább nem értek egyet	Egyetértek	Még nem döntöttem	Egyáltalán nem								Még nem döntöttem/nem tudom	Nincs kisebb gyermekem	Nem										Drága	Nem megfelelő	
+2026.05.11. 18:40:16	1-2 osztály, 3-4 osztály	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Semleges	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Semleges	Egyetértek	Semleges	Semleges	Egyetértek	Semleges	Semleges	Teljesen egyetértek		Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Semleges	Semleges	Teljesen egyetértek	Semleges	Semleges	Egyetértek	Egyetértek	Semleges	Egyetértek	Nem	Egyáltalán nem								Gimnázium	Nincs kisebb gyermekem	Nem										Megfelelő	Nem megfelelő	Rossz minőségű étel. Rendszeresen mócsingos hús. 
+2026.05.11. 19:02:54	1-2 osztály, 3-4 osztály	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Inkább nem értek egyet	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Egyetértek	Semleges	Semleges	Egyetértek	Egyáltalán nem értek egyet	Teljesen egyetértek	Semleges	Egyáltalán nem értek egyet	Egyetértek		Semleges	Teljesen egyetértek	Egyetértek	Semleges	Teljesen egyetértek	Egyetértek	Semleges	Egyetértek	Inkább nem értek egyet	Teljesen egyetértek	Semleges	Semleges	Egyetértek	Semleges	Egyáltalán nem értek egyet	Semleges	Nem	Nem döntően, de kis mértékben szerepet játszik	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Semleges	Semleges	Egyetértek	Gimnázium	Nincs kisebb gyermekem	Igen	Egyetértek	Egyetértek	Semleges	Semleges	Teljesen egyetértek	Semleges	Egyetértek	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Megfelelő	Nem megfelelő	
+2026.05.11. 19:19:54	1-2 osztály	Egyetértek	Teljesen egyetértek	Semleges	Semleges	Teljesen egyetértek	Semleges	Teljesen egyetértek	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Teljesen egyetértek	Egyáltalán nem értek egyet	Teljesen egyetértek	Egyetértek	Egyáltalán nem értek egyet	Teljesen egyetértek		Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Egyáltalán nem értek egyet	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Semleges	Teljesen egyetértek	Inkább nem értek egyet	Teljesen egyetértek	Teljesen egyetértek	Semleges	Teljesen egyetértek	Még nem döntöttem	Nagyon fontos szempont	Teljesen egyetértek	Semleges	Semleges	Semleges	Teljesen egyetértek	Teljesen egyetértek	Semleges	Gimnázium	Nincs kisebb gyermekem	Nem										Megfelelő	Megfelelő	Szeretnénk ha sokkal magasabb óraszámban lenne első és második nyelvoktatás is.
+2026.05.11. 21:14:58	1-2 osztály, 3-4 osztály	Inkább nem értek egyet	Teljesen egyetértek	Egyáltalán nem értek egyet	Egyetértek	Teljesen egyetértek	Egyáltalán nem értek egyet	Semleges	Inkább nem értek egyet	Egyáltalán nem értek egyet	Egyetértek	Teljesen egyetértek	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Kedvező tapasztalatok a Péter-Pál óvodával.	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Inkább nem értek egyet	Semleges	Teljesen egyetértek	Teljesen egyetértek	Egyáltalán nem értek egyet	Egyetértek	Semleges	Egyáltalán nem értek egyet	Semleges	Nem	Nagyon fontos szempont	Egyáltalán nem értek egyet	Teljesen egyetértek	Semleges	Egyetértek	Semleges	Teljesen egyetértek	Egyáltalán nem értek egyet	Gimnázium	Nincs kisebb gyermekem	Nem										Drága	Megfelelő	
+2026.05.11. 22:53:43	1-2 osztály	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Inkább nem értek egyet	Semleges	Teljesen egyetértek	Semleges	Inkább nem értek egyet	Egyetértek	Teljesen egyetértek	Semleges	Egyetértek		Semleges	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Semleges	Semleges	Teljesen egyetértek	Egyetértek	Semleges	Egyetértek	Teljesen egyetértek	Semleges	Egyetértek	Még nem döntöttem	Nagyon fontos szempont	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Teljesen egyetértek	Egyetértek	Gimnázium	Igen	Nem										Drága	Megfelelő	
+2026.05.11. 23:00:22	3-4 osztály	Semleges	Egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Semleges	Egyetértek	Semleges	Semleges	Teljesen egyetértek	Egyetértek	Semleges	Semleges	Semleges	Semleges	Semleges	Legközelebbi egyházi iskola	Semleges	Egyetértek	Semleges	Egyetértek	Egyetértek	Semleges	Inkább nem értek egyet	Inkább nem értek egyet	Semleges	Egyetértek	Egyetértek	Semleges	Semleges	Semleges	Inkább nem értek egyet	Semleges	Nem	Nem döntően, de kis mértékben szerepet játszik	Semleges	Semleges	Semleges	Semleges	Teljesen egyetértek	Egyetértek	Semleges	Gimnázium, Technikum/Szakgimnázium	Még nem döntöttem	Igen	Semleges	Semleges	Semleges	Semleges	Teljesen egyetértek	Egyetértek	Semleges	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Megfelelő	Kiváló	
+2026.05.12. 6:44:32	1-2 osztály, 3-4 osztály	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Semleges	Egyetértek	Semleges	Egyetértek	Egyetértek	X	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Semleges	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Teljesen egyetértek	Semleges	Egyetértek	Semleges	Egyetértek	Egyetértek	Igen	Nagyon fontos szempont	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Gimnázium, Technikum/Szakgimnázium	Igen	Nem										Megfelelő	Megfelelő	
+2026.05.12. 7:04:57	5-6 osztály	Inkább nem értek egyet	Egyetértek	Egyetértek	Teljesen egyetértek	Semleges	Egyáltalán nem értek egyet	Semleges	Semleges	Egyetértek	Egyáltalán nem értek egyet	Semleges	Egyáltalán nem értek egyet	Inkább nem értek egyet	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Semleges	Nem	Inkább nem értek egyet	Semleges	Semleges	Teljesen egyetértek	Semleges	Semleges	Inkább nem értek egyet	Semleges	Semleges	Semleges	Semleges	Semleges	Inkább nem értek egyet	Semleges	Semleges	Semleges	Nem	Egyáltalán nem								Gimnázium	Nincs kisebb gyermekem	Igen	Egyetértek	Egyetértek	Inkább nem értek egyet	Egyetértek	Semleges	Teljesen egyetértek	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Megfelelő	Megfelelő	
+2026.05.12. 7:21:27	7-8 osztály	Egyetértek	Teljesen egyetértek	Semleges	Inkább nem értek egyet	Egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Egyetértek	Semleges	Semleges	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Semleges	Teljesen egyetértek		Inkább nem értek egyet	Egyetértek	Egyetértek	Egyetértek	Semleges	Teljesen egyetértek	Inkább nem értek egyet	Inkább nem értek egyet	Inkább nem értek egyet	Semleges	Semleges	Inkább nem értek egyet	Egyetértek	Egyetértek	Semleges	Semleges	Igen	Egyáltalán nem								Gimnázium	Nem	Nem										Drága	Nem megfelelő	
+2026.05.12. 7:49:00	1-2 osztály	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Semleges	Semleges	Semleges	Semleges	Semleges	Semleges	Semleges		Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Semleges	Semleges	Egyetértek	Még nem döntöttem	Nem döntően, de kis mértékben szerepet játszik	Semleges	Semleges	Semleges	Semleges	Semleges	Semleges	Egyetértek	Még nem döntöttem/nem tudom	Igen	Nem										Megfelelő	Megfelelő	
+2026.05.12. 8:04:05	1-2 osztály, 3-4 osztály	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Semleges	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Semleges	Teljesen egyetértek	Semleges	Inkább nem értek egyet	Semleges	Semleges	Inkább nem értek egyet	Teljesen egyetértek		Semleges	Teljesen egyetértek	Egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Inkább nem értek egyet	Inkább nem értek egyet	Teljesen egyetértek	Semleges	Egyáltalán nem értek egyet	Inkább nem értek egyet	Semleges	Inkább nem értek egyet	Egyetértek	Még nem döntöttem	Nagyon fontos szempont	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Semleges	Gimnázium	Nincs kisebb gyermekem	Nem										Drága	Megfelelő	
+2026.05.12. 8:13:46	3-4 osztály	Egyetértek	Semleges	Semleges	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Semleges	Semleges	Semleges	Egyetértek	Semleges	Teljesen egyetértek	Egyetértek		Egyetértek	Semleges	Semleges	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Semleges	Semleges	Semleges	Egyetértek	Semleges	Teljesen egyetértek	Egyetértek	Igen	Talán	Egyetértek	Semleges	Semleges	Semleges	Egyetértek	Semleges	Semleges	Gimnázium	Nincs kisebb gyermekem	Nem										Megfelelő	Kiváló	
+2026.05.12. 8:26:05	1-2 osztály, 5-6 osztály	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	nem	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Igen	Talán	Egyetértek	Semleges	Semleges	Semleges	Semleges	Semleges	Semleges	Még nem döntöttem/nem tudom	Igen	Nem										Drága	Megfelelő	
+2026.05.12. 8:45:05	1-2 osztály, 7-8 osztály	Semleges	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Semleges	Semleges	Semleges	Semleges	Semleges	Semleges	Semleges	Semleges	Semleges	Semleges	Semleges		Inkább nem értek egyet	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Semleges	Semleges	Semleges	Semleges	Semleges	Semleges	Semleges	Semleges	Semleges	Semleges	Semleges	Igen	Egyáltalán nem								Gimnázium	Nincs kisebb gyermekem	Igen	Inkább nem értek egyet	Inkább nem értek egyet	Inkább nem értek egyet	Inkább nem értek egyet	Egyetértek	Egyetértek	Semleges	Semleges	Semleges	Megfelelő	Megfelelő	
+2026.05.12. 10:01:05	3-4 osztály	Egyetértek	Egyetértek	Egyetértek	Inkább nem értek egyet	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Semleges	Egyetértek	Egyetértek	Inkább nem értek egyet	Egyetértek	Teljesen egyetértek	Inkább nem értek egyet	Egyetértek	Testvèrek is ebbe az iskolàba jàrtak.	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Semleges	Semleges	Teljesen egyetértek	Teljesen egyetértek	Semleges	Teljesen egyetértek	Teljesen egyetértek	Inkább nem értek egyet	Teljesen egyetértek	Még nem döntöttem	Talán	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Gimnázium	Nincs kisebb gyermekem	Igen	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Semleges	Inkább nem értek egyet	Inkább nem értek egyet	Megfelelő	Megfelelő	
+2026.05.12. 10:13:32	7-8 osztály	Inkább nem értek egyet	Egyetértek	Semleges	Inkább nem értek egyet	Egyetértek	Inkább nem értek egyet	Teljesen egyetértek	Egyetértek	Inkább nem értek egyet	Egyetértek	Inkább nem értek egyet	Egyáltalán nem értek egyet	Egyetértek	Egyetértek	Semleges	Egyetértek	másik két gyermekkel szerzett tapasztalatok, az alsó tagozaton tanító pedagógusok személye és szakmai munkája, korábbi tapasztalatok alapján	Inkább nem értek egyet	Egyetértek	Teljesen egyetértek	Semleges	Semleges	Egyetértek	Egyetértek	Egyetértek	Semleges	Inkább nem értek egyet	Inkább nem értek egyet	Egyáltalán nem értek egyet	Egyetértek	Teljesen egyetértek	Semleges	Egyetértek	Igen	Nagyon fontos szempont	Teljesen egyetértek	Egyetértek	Egyetértek	Inkább nem értek egyet	Egyetértek	Semleges	Egyetértek	Gimnázium	Nincs kisebb gyermekem	Igen, de később visszahoztam.										Megfelelő	Megfelelő	módszertani szempontból a kérdőívnek vannak kritikus pontjai, érdemes lenne egy ilyen kérdőívet először (kutatás)módszertani szempontból kicsit átnézni, mert a válaszokból kapott adatok és az erre épült elemzés eredményesebbek lennének. Azt gondolom, érdemes lenne az alsó és felső tagozat szerint is különválasztani a válaszadást és több ponton átgondolni az itemeket vagy azt, hogy ezek az itemek milyen indikátorhoz kapcsolódnak. 
+2026.05.12. 10:15:38	7-8 osztály	Egyetértek	Semleges	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyáltalán nem értek egyet	Teljesen egyetértek	Teljesen egyetértek	Inkább nem értek egyet	Egyáltalán nem értek egyet	Semleges	Teljesen egyetértek	Egyetértek	Semleges	Semleges	Teljesen egyetértek	Nem	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Inkább nem értek egyet	Egyetértek	Egyetértek	Semleges	Semleges	Inkább nem értek egyet	Egyáltalán nem értek egyet	Egyetértek	Semleges	Semleges	Egyetértek	Igen	Nem döntően, de kis mértékben szerepet játszik	Teljesen egyetértek	Teljesen egyetértek	Inkább nem értek egyet	Inkább nem értek egyet	Teljesen egyetértek	Egyetértek	Egyáltalán nem értek egyet	Gimnázium, Technikum/Szakgimnázium	Nincs kisebb gyermekem	Nem										Megfelelő	Megfelelő	
+2026.05.12. 10:28:16	3-4 osztály	Semleges	Semleges	Semleges	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Semleges	Semleges	Semleges	Egyáltalán nem értek egyet	Semleges	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Teljesen egyetértek		Semleges	Semleges	Semleges	Teljesen egyetértek	Semleges	Egyáltalán nem értek egyet	Semleges	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Egyetértek	Egyetértek	Egyáltalán nem értek egyet	Egyetértek	Semleges	Egyáltalán nem értek egyet	Semleges	Igen	Egyáltalán nem								Gimnázium	Nincs kisebb gyermekem	Nem										Drága	Nem megfelelő	Nem tudok semmit a felső tagozat által nyújtott lehetőségekről. Az étkeztetéssel pedig nem értek egyet, szívesen teszteltük volna az új menzareform rendszert, én nem láttam, hogy megkérdeztek volna róla minket.
+2026.05.12. 10:52:11	5-6 osztály	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Semleges	Egyetértek	Egyetértek	Semleges	Semleges	Inkább nem értek egyet	Teljesen egyetértek	Egyetértek	Semleges	Semleges	Semleges		Inkább nem értek egyet	Egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Semleges	Semleges	Inkább nem értek egyet	Semleges	Semleges	Semleges	Egyáltalán nem értek egyet	Inkább nem értek egyet	Semleges	Semleges	Semleges	Még nem döntöttem	Talán	Egyetértek	Egyetértek	Semleges	Semleges	Semleges	Egyetértek	Egyetértek	Gimnázium	Nincs kisebb gyermekem	Igen	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Semleges	Inkább nem értek egyet	Inkább nem értek egyet	Megfelelő	Megfelelő	
+2026.05.12. 12:15:31	7-8 osztály	Semleges	Egyetértek	Egyetértek	Teljesen egyetértek	Semleges	Semleges	Semleges	Semleges	Semleges	Semleges	Semleges	Egyetértek	Semleges	Semleges	Semleges	Semleges	nem	Inkább nem értek egyet	Semleges	Semleges	Egyetértek	Semleges	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Semleges	Semleges	Semleges	Semleges	Egyáltalán nem értek egyet	Inkább nem értek egyet	Semleges	Semleges	Inkább nem értek egyet	Igen	Egyáltalán nem								Gimnázium, Technikum/Szakgimnázium	Nincs kisebb gyermekem	Nem										Drága	Nem megfelelő	Az iskola szellemisége nagyon messze van a szalézi szellemiségtől. A diákok igazi tehetsége nem tud kibontakozni. Az érdemjegyek százalékos meghatározását túlzásnak tartom. Érettségin 60% 4-es, itt 59% 2-es. Hogy szeressen meg egy diák iskolába járni, ha a 4-eshez, 5-öshöz szinte alig hibázhat.
+2026.05.12. 12:17:47	1-2 osztály	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Semleges	Teljesen egyetértek	Egyetértek	Semleges	Egyetértek		Semleges	Egyetértek	Egyetértek	Egyetértek	Teljesen egyetértek	Semleges	Egyetértek	Egyetértek	Semleges	Egyetértek	Egyetértek	Inkább nem értek egyet	Semleges	Semleges	Egyetértek	Egyetértek	Még nem döntöttem	Nagyon fontos szempont	Egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Egyetértek	Semleges	Semleges	Gimnázium	Igen	Igen	Semleges	Semleges	Semleges	Semleges	Teljesen egyetértek	Egyetértek	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Megfelelő	Megfelelő	
+2026.05.12. 12:50:31	7-8 osztály	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Semleges	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Semleges	Teljesen egyetértek	 	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Igen	Kizárólag ez határozza meg	Egyáltalán nem értek egyet	Inkább nem értek egyet	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Inkább nem értek egyet	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Gimnázium, Technikum/Szakgimnázium	Igen	Nem										Megfelelő	Megfelelő	
+2026.05.12. 16:20:39	1-2 osztály	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Inkább nem értek egyet	Teljesen egyetértek	Inkább nem értek egyet	Teljesen egyetértek	Egyetértek	Semleges	Egyáltalán nem értek egyet	Semleges	Semleges	Teljesen egyetértek	Teljesen egyetértek	Inkább nem értek egyet	Teljesen egyetértek	Bár szerepelt a listán, de kihangsúlyoznám, hogy az osztályfőnök személye volt a döntő érv	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Semleges	Teljesen egyetértek	Semleges	Teljesen egyetértek	Egyetértek	Semleges	Egyáltalán nem értek egyet	Semleges	Egyáltalán nem értek egyet	Teljesen egyetértek	Teljesen egyetértek	Egyáltalán nem értek egyet	Teljesen egyetértek	Még nem döntöttem	Nagyon fontos szempont	Teljesen egyetértek	Semleges	Egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Semleges	Gimnázium	Még nem döntöttem	Nem										Drága	Nem megfelelő	Mentes étrend sajnos a valósagban nem volt az, ami nem az iskola hibája, de ettől még sajnos teny
+2026.05.12. 18:13:13	3-4 osztály	Egyetértek	Teljesen egyetértek	Semleges	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Semleges	Semleges	Teljesen egyetértek	Egyetértek	Egyetértek	Semleges	Semleges	Egyetértek	Nem körzetes iskola, így tudtunk jelentkezni. A másik katolikus iskola messzebb van tőlünk, ezért ezt választottuk.	Semleges	Teljesen egyetértek	Semleges	Egyetértek	Egyetértek	Inkább nem értek egyet	Semleges	Egyetértek	Egyetértek	Semleges	Inkább nem értek egyet	Inkább nem értek egyet	Semleges	Semleges	Semleges	Egyetértek	Még nem döntöttem	Nagyon fontos szempont	Teljesen egyetértek	Semleges	Semleges	Semleges	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Gimnázium	Nincs kisebb gyermekem	Nem										Drága	Nem megfelelő	Nagyon színvonalas, szép Anyák napi műsorral készültek a gyerekek a pedagógusok segítségével.Köszönjük!Örülünk a kedves hittanár személyének és annak, hogy a szerzetesek- papok is megjelennek az iskolai rendezvényeken. Régebben jött pap az udvarra és együtt játszott a gyerekekkel, hozott játékokat, meghatározó volt a szerepe.Lehetne most is ilyen. (Oratórium akkor is volt péntekenként).Sajnálom, hogy az iskola honlapján az szerepel, hogy 3. osztálytól van lehetőség idegen nyelv tanulására, de sajnos nem így van. Szakkör formájában/fizetős lehetőségként is hasznos lenne, elsőtől kezdve. Az osztályfőnökkel nehéz a kommunikáció, (nem válaszol a levelemre) és legutóbb a Krétában sem jelezte a témazárókat.
+2026.05.12. 18:24:00	3-4 osztály, 5-6 osztály	Teljesen egyetértek	Semleges	Egyetértek	Teljesen egyetértek	Egyetértek	Semleges	Egyetértek	Semleges	Semleges	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Teljesen egyetértek	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Semleges	Az általunk vizsgált III. kerületi iskolák közül ez volt az egyedüli, ahol nem a szülők hátterét csekkolgatták, hanem  a gyerekről kérdeztek...	Egyetértek	Egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Semleges	Semleges	Semleges	Egyáltalán nem értek egyet	Semleges	Egyáltalán nem értek egyet	Semleges	Semleges	Nem	Nem döntően, de kis mértékben szerepet játszik	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Gimnázium	Nincs kisebb gyermekem	Nem										Drága	Megfelelő	Ár-érték arányban nem jó a kínálat.
+2026.05.12. 18:41:55	5-6 osztály	Egyetértek	Egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Inkább nem értek egyet	Egyetértek	Egyetértek	Egyetértek	Semleges	Egyetértek	Egyetértek	Semleges	Teljesen egyetértek	Egyetértek	Egyetértek		Egyetértek	Egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Semleges	Egyetértek	Egyetértek	Egyetértek	Inkább nem értek egyet	Egyetértek	Egyetértek	Egyetértek	Teljesen egyetértek	Semleges	Egyetértek	Igen	Talán	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Technikum/Szakgimnázium	Nincs kisebb gyermekem	Nem										Megfelelő	Megfelelő	
+2026.05.12. 19:07:58	5-6 osztály	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Inkább nem értek egyet	Inkább nem értek egyet	Egyáltalán nem értek egyet	Egyetértek	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Teljesen egyetértek	idejárt az összes testvére	Egyetértek	Egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Semleges	Semleges	Semleges	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Semleges	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Nem	Talán	Egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Egyetértek	Gimnázium	Nincs kisebb gyermekem	Igen	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Megfelelő	Megfelelő	
+2026.05.12. 22:13:41	1-2 osztály, 5-6 osztály	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Teljesen egyetértek	Egyetértek	Semleges	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Első benyomás	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Inkább nem értek egyet	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Inkább nem értek egyet	Semleges	Semleges	Teljesen egyetértek	Egyetértek	Még nem döntöttem	Talán	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Gimnázium	Még nem döntöttem	Nem										Megfelelő	Megfelelő	
+2026.05.12. 23:39:48	1-2 osztály, 5-6 osztály	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Teljesen egyetértek	Semleges	Semleges	Egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek		Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Semleges	Inkább nem értek egyet	Semleges	Teljesen egyetértek	Semleges	Egyáltalán nem értek egyet	Egyetértek	Teljesen egyetértek	Semleges	Teljesen egyetértek	Nem	Nagyon fontos szempont	Teljesen egyetértek	Egyetértek	Semleges	Egyetértek	Semleges	Teljesen egyetértek	Semleges	Gimnázium	Nem	Nem										Drága	Nem megfelelő	
+2026.05.13. 4:23:46	1-2 osztály, 3-4 osztály	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Semleges	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek		Inkább nem értek egyet	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Semleges	Inkább nem értek egyet	Egyáltalán nem értek egyet	Inkább nem értek egyet	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Semleges	Semleges	Semleges	Egyáltalán nem értek egyet	Inkább nem értek egyet	Nem	Nagyon fontos szempont	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Gimnázium	Még nem döntöttem	Nem										Drága	Nem megfelelő	
+2026.05.13. 6:46:40	3-4 osztály	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Közelben van.	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Semleges	Semleges	Semleges	Egyetértek	Semleges	Teljesen egyetértek	Semleges	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Igen	Nagyon fontos szempont	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Még nem döntöttem/nem tudom	Nincs kisebb gyermekem	Nem										Drága	Megfelelő	
+2026.05.13. 8:40:51	1-2 osztály	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Semleges	Teljesen egyetértek	Egyetértek	Egyetértek	Egyetértek	Egyetértek	Semleges	Egyetértek	Egyetértek	Semleges	Semleges	Nem	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Semleges	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Semleges	Teljesen egyetértek	Teljesen egyetértek	Semleges	Semleges	Még nem döntöttem	Nagyon fontos szempont	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Egyetértek	Gimnázium	Igen	Nem										Drága	Megfelelő	Összeségében nagyon elégedettek vagyunk az iskolával.
+2026.05.13. 10:59:43	3-4 osztály	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Teljesen egyetértek	Inkább nem értek egyet	Egyetértek	Egyetértek	Egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek		Inkább nem értek egyet	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyáltalán nem értek egyet	Egyetértek	Egyetértek	Semleges	Teljesen egyetértek	Semleges	Egyáltalán nem értek egyet	Inkább nem értek egyet	Egyetértek	Egyetértek	Egyetértek	Nem	Nagyon fontos szempont	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Gimnázium	Még nem döntöttem	Igen	Teljesen egyetértek	Teljesen egyetértek	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Teljesen egyetértek	Teljesen egyetértek	Egyáltalán nem értek egyet	Semleges	Semleges	Drága	Megfelelő	
+2026.05.13. 14:26:31	1-2 osztály, 5-6 osztály	Egyetértek	Teljesen egyetértek	Semleges	Semleges	Teljesen egyetértek	Semleges	Egyetértek	Teljesen egyetértek	Semleges	Semleges	Semleges	Semleges	Egyetértek	Semleges	Semleges	Semleges		Semleges	Egyetértek	Teljesen egyetértek	Semleges	Egyetértek	Semleges	Egyetértek	Egyetértek	Semleges	Semleges	Semleges	Semleges	Semleges	Egyetértek	Semleges	Semleges	Igen	Egyáltalán nem								Gimnázium, Technikum/Szakgimnázium	Nincs kisebb gyermekem	Nem										Drága	Megfelelő	
+2026.05.13. 16:02:38	1-2 osztály	Semleges	Teljesen egyetértek	Egyetértek	Semleges	Teljesen egyetértek	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Semleges	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet		Inkább nem értek egyet	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Inkább nem értek egyet	Inkább nem értek egyet	Semleges	Inkább nem értek egyet	Semleges	Egyáltalán nem értek egyet	Semleges	Semleges	Semleges	Igen	Egyáltalán nem								Gimnázium	Igen	Nem										Megfelelő	Nem megfelelő	Javítani kellene a minőségen. Több zöldség, hús.
+2026.05.13. 18:26:37	5-6 osztály, 7-8 osztály	Semleges	Teljesen egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Egyetértek	Semleges	Egyetértek	Semleges	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet		Egyáltalán nem értek egyet	Egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Semleges	Semleges	Semleges	Semleges	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Nem	Nagyon fontos szempont	Teljesen egyetértek	Teljesen egyetértek	Semleges	Egyetértek	Egyetértek	Teljesen egyetértek	Teljesen egyetértek	Gimnázium	Nem	Igen	Teljesen egyetértek	Teljesen egyetértek	Inkább nem értek egyet	Inkább nem értek egyet	Semleges	Egyetértek	Egyetértek	Egyáltalán nem értek egyet	Egyáltalán nem értek egyet	Megfelelő	Megfelelő	`;
+    // IDE KERÜLNEK AZ ADATSOROK (az eredeti TSV_DATA tartalma)
+
+    // ============================================================
+    // PARSE & EXPAND
+    // ============================================================
+    function parseAndExpand(tsvText) {
+      const result = Papa.parse(tsvText.trim(), {
+        header: true, skipEmptyLines: true, delimiter: "\t", quoteChar: '"', escapeChar: '"',
+        transformHeader: (h) => h.trim(), transform: (value) => value ? value.trim() : ''
+      });
+      const rows = [];
+      const families = result.data;
+      const gradeCol = 'Hányadik osztályba jár/járnak a gyermeke/gyermekei? (több is bejelölhető)';
+      families.forEach(row => {
+        if (Object.keys(row).length < 50) return;
+        const grades = (row[gradeCol] || '').split(',').map(g => g.trim()).filter(g => GRADE_KEYS.includes(g));
+        if (grades.length === 0) grades.push('Ismeretlen');
+        grades.forEach(grade => { rows.push({ ...row, _grade: grade }); });
+      });
+      return { rows, familyCount: families.length };
+    }
+
+    // ============================================================
+    // FILTER HELPERS
+    // ============================================================
+    function getFiltered() { return allRows.filter(r => activeGrades.has(r._grade)); }
+    function getByGrade(g) { return allRows.filter(r => r._grade === g); }
+
+    function sortBarData(labels, values, mode = 'desc') {
+      const combined = labels.map((label, i) => ({ label, value: values[i] }));
+      combined.sort((a, b) => mode === 'asc' ? a.value - b.value : b.value - a.value);
+      return { labels: combined.map(x => x.label), values: combined.map(x => x.value) };
+    }
+
+    // Sort compare data by difference (B-A)
+    function sortCmpData(labels, valuesA, valuesB, mode = 'desc') {
+      const diffs = valuesA.map((a, i) => valuesB[i] - a);
+      const combined = labels.map((label, i) => ({ label, a: valuesA[i], b: valuesB[i], diff: diffs[i] }));
+      combined.sort((x, y) => mode === 'asc' ? x.diff - y.diff : y.diff - x.diff);
+      return {
+        labels: combined.map(x => x.label),
+        valuesA: combined.map(x => x.a),
+        valuesB: combined.map(x => x.b),
+        diffs: combined.map(x => x.diff)
+      };
+    }
+
+    // ============================================================
+    // CHART HELPERS
+    // ============================================================
+    function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
+
+    function makePie(canvasId, legendId, labels, values) {
+      destroyChart(canvasId);
+      const total = values.reduce((a, b) => a + b, 0);
+      const ctx = document.getElementById(canvasId).getContext('2d');
+      charts[canvasId] = new Chart(ctx, {
+        type: 'pie',
+        data: { labels, datasets: [{ data: values, backgroundColor: PIE_COLORS.slice(0, labels.length), borderWidth: 2, borderColor: '#fffdf9' }] },
+        options: {
+          plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.raw} (${total ? Math.round(ctx.raw / total * 100) : 0}%)` } } },
+          animation: { duration: 400 }
+        }
+      });
+      if (legendId) {
+        const el = document.getElementById(legendId);
+        el.innerHTML = labels.map((l, i) => {
+          const pct = total ? Math.round(values[i] / total * 100) : 0;
+          return `<div class="legend-item"><span class="legend-dot" style="background:${PIE_COLORS[i]}"></span><span>${l}</span><span class="legend-pct">${pct}% (${values[i]})</span></div>`;
+        }).join('');
+      }
+    }
+
+    // Dual pie for compare mode (A and B side by side, same color scheme)
+    function makeCmpPie(canvasId, legendId, labels, values, color) {
+      destroyChart(canvasId);
+      const total = values.reduce((a, b) => a + b, 0);
+      // Generate shades from base color
+      const baseColors = labels.map((_, i) => {
+        const alpha = 1 - (i * 0.12);
+        return color + Math.round(Math.max(alpha, 0.3) * 255).toString(16).padStart(2, '0');
+      });
+      // Use PIE_COLORS but tint with group color
+      const cols = PIE_COLORS.slice(0, labels.length);
+      const ctx = document.getElementById(canvasId).getContext('2d');
+      charts[canvasId] = new Chart(ctx, {
+        type: 'pie',
+        data: { labels, datasets: [{ data: values, backgroundColor: cols, borderWidth: 2, borderColor: '#fffdf9' }] },
+        options: {
+          plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.raw} (${total ? Math.round(ctx.raw / total * 100) : 0}%)` } } },
+          animation: { duration: 400 }
+        }
+      });
+      if (legendId) {
+        const el = document.getElementById(legendId);
+        el.innerHTML = labels.map((l, i) => {
+          const pct = total ? Math.round(values[i] / total * 100) : 0;
+          return `<div class="legend-item"><span class="legend-dot" style="background:${cols[i]}"></span><span>${l}</span><span class="legend-pct">${pct}% (${values[i]})</span></div>`;
+        }).join('');
+      }
+      return { labels, values, total };
+    }
+
+    function makePieDiffTable(containerId, labelsA, pctA, labelsB, pctB) {
+      // Merge all labels
+      const allLabels = [...new Set([...labelsA, ...labelsB])];
+      const mapA = {}, mapB = {};
+      labelsA.forEach((l, i) => mapA[l] = pctA[i] || 0);
+      labelsB.forEach((l, i) => mapB[l] = pctB[i] || 0);
+
+      const rows = allLabels.map(l => ({ label: l, a: mapA[l] || 0, b: mapB[l] || 0, diff: (mapB[l] || 0) - (mapA[l] || 0) }));
+      rows.sort((x, y) => Math.abs(y.diff) - Math.abs(x.diff));
+
+      const el = document.getElementById(containerId);
+      el.innerHTML = `<table class="diff-table">
+        <thead><tr><th>Válasz</th><th>A</th><th>B</th><th>Δ</th></tr></thead>
+        <tbody>${rows.map(r => {
+          const cls = r.diff > 1 ? 'diff-pos' : r.diff < -1 ? 'diff-neg' : 'diff-neu';
+          const sign = r.diff > 0 ? '+' : '';
+          return `<tr><td>${r.label}</td><td>${r.a}%</td><td>${r.b}%</td><td class="diff-val ${cls}">${sign}${r.diff}pp</td></tr>`;
+        }).join('')}</tbody></table>`;
+    }
+
+    function makeBar(canvasId, labels, values, options = {}) {
+      destroyChart(canvasId);
+      values = values.map(v => Number.isFinite(v) ? v : 0);
+      const colors = values.map(v => v > 0.3 ? BAR_POS : v < -0.3 ? BAR_NEG : BAR_NEU);
+      const canvas = document.getElementById(canvasId);
+      const wrap = canvas.parentElement;
+      wrap.style.height = Math.max(420, labels.length * 55) + 'px';
+      const ctx = canvas.getContext('2d');
+      charts[canvasId] = new Chart(ctx, {
+        type: 'bar',
+        data: { labels, datasets: [{ data: values, backgroundColor: colors, borderRadius: 4, borderSkipped: false, barThickness: 22 }] },
+        options: {
+          indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+          layout: { padding: { left: 10, right: 20, top: 10, bottom: 10 } },
+          plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` Átlag: ${ctx.raw.toFixed(2)}` } } },
+          scales: {
+            x: { min: -2, max: 2, grid: { color: 'rgba(0,0,0,0.06)' },
+              ticks: { stepSize: 1, font: { family: 'Source Serif 4, Georgia, serif', size: 11 },
+                callback: options.tickCallback || (v => { if(v===-2) return 'Egyáltalán nem'; if(v===-1) return 'Inkább nem'; if(v===0) return 'Semleges'; if(v===1) return 'Egyetért'; if(v===2) return 'Teljesen egyetért'; return v; }) }
+            },
+            y: { grid: { display: false }, ticks: { autoSkip: false, font: { family: 'Source Serif 4, Georgia, serif', size: 12 }, color: '#1a1612',
+              callback: function(value) { const label = this.getLabelForValue(value); if (label.length > 38) return label.match(/.{1,38}(\s|$)/g); return label; } } }
+          }
+        }
+      });
+    }
+
+    // Compare bar: 3 datasets (A, B, diff) grouped
+    function makeCmpBar(canvasId, labels, valuesA, valuesB, diffs, options = {}) {
+      destroyChart(canvasId);
+      valuesA = valuesA.map(v => Number.isFinite(v) ? v : 0);
+      valuesB = valuesB.map(v => Number.isFinite(v) ? v : 0);
+      diffs = diffs.map(v => Number.isFinite(v) ? v : 0);
+      const diffColors = diffs.map(v => v > 0.1 ? CMP_DIFF_POS : v < -0.1 ? CMP_DIFF_NEG : CMP_DIFF_NEU);
+      const canvas = document.getElementById(canvasId);
+      const wrap = canvas.parentElement;
+      wrap.style.height = Math.max(500, labels.length * 80) + 'px';
+      const ctx = canvas.getContext('2d');
+      const labelA = GRADE_SHORT[cmpGradeA] || 'A';
+      const labelB = GRADE_SHORT[cmpGradeB] || 'B';
+      charts[canvasId] = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [
+            { label: labelA, data: valuesA, backgroundColor: CMP_A, borderRadius: 3, borderSkipped: false, barThickness: 14 },
+            { label: labelB, data: valuesB, backgroundColor: CMP_B, borderRadius: 3, borderSkipped: false, barThickness: 14 },
+            { label: 'Eltérés (B−A)', data: diffs, backgroundColor: diffColors, borderRadius: 3, borderSkipped: false, barThickness: 14,
+              borderWidth: 1.5, borderColor: diffs.map(v => v > 0.1 ? 'rgba(74,124,89,0.9)' : v < -0.1 ? 'rgba(139,58,42,0.9)' : 'rgba(158,149,137,0.7)'),
+              borderDash: [4,2]
+            }
+          ]
+        },
+        options: {
+          indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+          layout: { padding: { left: 10, right: 20, top: 10, bottom: 10 } },
+          plugins: {
+            legend: { display: true, position: 'top', labels: { font: { family: 'Source Serif 4, Georgia, serif', size: 12 }, padding: 16, boxWidth: 20 } },
+            tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.raw.toFixed(2)}` } }
+          },
+          scales: {
+            x: { min: -2, max: 2, grid: { color: 'rgba(0,0,0,0.06)' },
+              ticks: { stepSize: 1, font: { family: 'Source Serif 4, Georgia, serif', size: 11 },
+                callback: options.tickCallback || (v => { if(v===-2) return 'Egyáltalán nem'; if(v===-1) return 'Inkább nem'; if(v===0) return 'Semleges'; if(v===1) return 'Egyetért'; if(v===2) return 'Teljesen egyetért'; return v; }) }
+            },
+            y: { grid: { display: false }, ticks: { autoSkip: false, font: { family: 'Source Serif 4, Georgia, serif', size: 11 }, color: '#1a1612',
+              callback: function(value) { const label = this.getLabelForValue(value); if (label.length > 32) return label.match(/.{1,32}(\s|$)/g); return label; } } }
+          }
+        }
+      });
+    }
+
+    // ============================================================
+    // COLUMN HELPERS
+    // ============================================================
+    function shortLabel(col) {
+      const m = col.match(/\[(.+?)\]/);
+      if (m) return m[1];
+      return col.replace(/^[,\s]+/, '').trim();
+    }
+
+    function avgScore(rows, col) {
+      const vals = rows.map(r => SCORE_MAP[r[col]]).filter(v => v !== undefined);
+      if (!vals.length) return 0;
+      return vals.reduce((a, b) => a + b, 0) / vals.length;
+    }
+
+    function countValues(rows, col, multi = false) {
+      const counts = {};
+      rows.forEach(r => {
+        let vals;
+        if (multi) { vals = (r[col] || '').split(',').map(v => v.trim()).filter(Boolean); }
+        else { vals = [(r[col] || '').trim()].filter(Boolean); }
+        vals.forEach(v => { counts[v] = (counts[v] || 0) + 1; });
+      });
+      return counts;
+    }
+
+    function getPctMap(counts) {
+      const total = Object.values(counts).reduce((a, b) => a + b, 0);
+      const pct = {};
+      Object.keys(counts).forEach(k => { pct[k] = total ? Math.round(counts[k] / total * 100) : 0; });
+      return { pct, total };
+    }
+
+    // ============================================================
+    // UPDATE COMPARE LABELS
+    // ============================================================
+    function updateCmpLabels() {
+      const a = GRADE_SHORT[cmpGradeA] || cmpGradeA;
+      const b = GRADE_SHORT[cmpGradeB] || cmpGradeB;
+      ['q1','q5','q6','q8','q9','q10','q12','q13'].forEach(q => {
+        const ta = document.getElementById(`${q}-title-a`);
+        const tb = document.getElementById(`${q}-title-b`);
+        if (ta) ta.textContent = `A: ${a}`;
+        if (tb) tb.textContent = `B: ${b}`;
+      });
+      ['q2','q4','q2q4','q7','q11'].forEach(q => {
+        const la = document.getElementById(`${q}-leg-a-label`);
+        const lb = document.getElementById(`${q}-leg-b-label`);
+        if (la) la.textContent = `A: ${a}`;
+        if (lb) lb.textContent = `B: ${b}`;
+      });
+    }
+
+    // ============================================================
+    // TOGGLE COMPARE/NORMAL VISIBILITY
+    // ============================================================
+    function setCmpVisibility() {
+      // Bar chart legends
+      ['q2','q4','q2q4','q7','q11'].forEach(q => {
+        const el = document.getElementById(`${q}-cmp-legend`);
+        if (el) el.classList.toggle('visible', compareMode);
+      });
+      // Pie chart containers
+      ['q1','q5','q6','q8','q9','q10','q12','q13'].forEach(q => {
+        const norm = document.getElementById(`${q}-normal-wrap`);
+        const cmp = document.getElementById(`${q}-cmp-wrap`);
+        if (norm) norm.style.display = compareMode ? 'none' : '';
+        if (cmp) cmp.classList.toggle('visible', compareMode);
+      });
+      // Filter bar state
+      const filterChecks = document.getElementById('filter-checks');
+      const filterLabel = document.getElementById('filter-mode-label');
+      filterChecks.style.opacity = compareMode ? '0.35' : '1';
+      filterChecks.style.pointerEvents = compareMode ? 'none' : '';
+      filterLabel.textContent = compareMode ? 'Összehasonlítás aktív – szűrő inaktív' : 'Korcsoport szűrő:';
+    }
+
+    // ============================================================
+    // RENDER ALL CHARTS
+    // ============================================================
+    function renderAll() {
+      if (compareMode) {
+        renderCompare();
+      } else {
+        renderNormal();
+      }
+      renderTextAnswers();
+      renderResponseRates();
+    }
+
+    function renderNormal() {
+      const filtered = getFiltered();
+      const headers = Object.keys(filtered[0] || allRows[0] || {});
+
+      document.getElementById('stat-families').textContent = new Set(allRows.map(r => r['Időbélyeg'])).size;
+      document.getElementById('stat-rows').textContent = allRows.length;
+      document.getElementById('stat-visible').textContent = filtered.length;
+
+      // Q1
+      { const counts = {}; filtered.forEach(r => { counts[r._grade] = (counts[r._grade] || 0) + 1; }); const labels = GRADE_KEYS.filter(g => counts[g]); makePie('chart-q1','legend-q1',labels,labels.map(l=>counts[l]||0)); }
+      // Q2
+      { const cols = headers.filter(h=>h.includes('Miért íratta')&&h.includes('[')); const labels=cols.map(c=>shortLabel(c)); const values=cols.map(c=>avgScore(filtered,c)); const s=sortBarData(labels,values,barSortMode.q2); makeBar('chart-q2',s.labels,s.values); }
+      // Q4
+      { const cols=headers.filter(h=>h.includes('Mennyire teljesültek')&&h.includes('[')); const labels=cols.map(c=>shortLabel(c)); const values=cols.map(c=>avgScore(filtered,c)); const s=sortBarData(labels,values,barSortMode.q4); makeBar('chart-q4',s.labels,s.values); }
+      // Q2 vs Q4
+      { const prefQ2='Miért íratta gyermekét/gyermekeit a szalézi általános iskolába? Azért, mert számunkra fontos a(z) ['; const prefQ4='Mennyire teljesültek az előzetes elvárásai? A várakozásainknak megfelelően teljesült: ['; const cQ2=headers.filter(h=>h.startsWith(prefQ2)); const cQ4=headers.filter(h=>h.startsWith(prefQ4)); const labels=cQ2.map(c=>shortLabel(c)); const values=cQ2.map((c,i)=>avgScore(filtered,cQ4[i])-avgScore(filtered,c)); const s=sortBarData(labels,values,barSortMode.q2q4); makeBar('chart-q2-q4-diff',s.labels,s.values,{tickCallback:v=>{if(v===-2)return 'Sokkal rosszabb';if(v===-1)return 'Rosszabb';if(v===0)return 'Ugyanolyan';if(v===1)return 'Jobb';if(v===2)return 'Sokkal jobb';return v;}}); }
+      // Q5
+      { const col='Terveik szerint 8. osztályig az iskolában marad gyermekük?'; const ORDER=['Igen','Még nem döntöttem','Nem']; const counts=countValues(filtered,col); const labels=ORDER.filter(k=>counts[k]!=null); makePie('chart-q5','legend-q5',labels,labels.map(l=>counts[l]||0)); }
+      // Q6
+      { const col='Döntésüket mennyiben befolyásolják az iskola által felső tagozaton kínált lehetőségek?';
+        const Q6_ORDER = ['Nem döntően, de kis mértékben szerepet játszik','Talán','Nagyon fontos szempont','Kizárólag ez határozza meg','Egyáltalán nem'];
+        const counts=countValues(filtered,col);
+        const labels=Q6_ORDER.filter(k=>counts[k]!=null);
+        makePie('chart-q6','legend-q6',labels,labels.map(l=>counts[l]||0)); }
+      // Q7
+      renderQ7(filtered, headers);
+      // Q8
+      { const col='Milyen típusú középiskolába szeretné járatni gyermekét az általános iskola után? (több is bejelölhető)'; const ORDER=['Gimnázium','Technikum/Szakgimnázium','Még nem döntöttem/nem tudom']; const counts=countValues(filtered,col,true); const labels=ORDER.filter(k=>counts[k]!=null); makePie('chart-q8','legend-q8',labels,labels.map(l=>counts[l]||0)); }
+      // Q9
+      { const col='Ha van kisebb gyermeke, tervezi-e a szalézi iskolába íratni?'; const ORDER=['Igen','Még nem döntöttem','Nem','Nincs kisebb gyermekem']; const countsAll=countValues(filtered,col); const labelsAll=ORDER.filter(k=>countsAll[k]!=null); makePie('chart-q9a','legend-q9a',labelsAll,labelsAll.map(l=>countsAll[l]||0)); const valid=['Igen','Még nem döntöttem','Nem']; const lB=valid.filter(v=>countsAll[v]!=null); makePie('chart-q9b','legend-q9b',lB,lB.map(l=>countsAll[l]||0)); }
+      // Q10
+      { const col='Van-e olyan gyermeke, aki járt a szalézi általános iskolába, de még általános iskolás korában átment másik oktatási intézménybe?'; const ORDER=['Igen','Nem','Igen, de később visszahoztam']; const counts=countValues(filtered,col); const labels=ORDER.filter(k=>counts[k]!=null); makePie('chart-q10','legend-q10',labels,labels.map(l=>counts[l]||0)); }
+      // Q11
+      { const cols=headers.filter(h=>h.includes('amelyek miatt')&&h.includes('[')); const labels=cols.map(c=>shortLabel(c)); const q10col='Van-e olyan gyermeke, aki járt a szalézi általános iskolába, de még általános iskolás korában átment másik oktatási intézménybe?'; const rel=filtered.filter(r=>(r[q10col]||'').startsWith('Igen')); const values=cols.map(c=>avgScore(rel.length>0?rel:filtered,c)); const s=sortBarData(labels,values,barSortMode.q11); makeBar('chart-q11',s.labels,s.values); }
+      // Q12
+      { const col='Mi a véleménye az iskolai étkeztetés költségéről?'; const ORDER=['Olcsó','Megfelelő','Drága']; const counts=countValues(filtered,col); const labels=ORDER.filter(k=>counts[k]!=null); makePie('chart-q12','legend-q12',labels,labels.map(l=>counts[l]||0)); }
+      // Q13
+      { const col='Mi a véleménye az iskolai étkeztetés minőségéről?'; const ORDER=['Megfelelő','Nem megfelelő']; const counts=countValues(filtered,col); const labels=ORDER.filter(k=>counts[k]!=null); makePie('chart-q13','legend-q13',labels,labels.map(l=>counts[l]||0)); }
+    }
+
+    function renderCompare() {
+      const rowsA = getByGrade(cmpGradeA);
+      const rowsB = getByGrade(cmpGradeB);
+      const headers = Object.keys(allRows[0] || {});
+
+      document.getElementById('stat-families').textContent = new Set(allRows.map(r => r['Időbélyeg'])).size;
+      document.getElementById('stat-rows').textContent = allRows.length;
+      document.getElementById('stat-visible').textContent = `${rowsA.length} vs ${rowsB.length}`;
+
+      updateCmpLabels();
+
+      // Helper: render a pie pair + diff table
+      function cmpPies(q, col, multi = false, fixedOrder = null) {
+        const cA = countValues(rowsA, col, multi); const cB = countValues(rowsB, col, multi);
+        const allL = (fixedOrder
+          ? fixedOrder.filter(k => (cA[k] != null || cB[k] != null))
+          : [...new Set([...Object.keys(cA),...Object.keys(cB)])].filter(k=>k&&k!=='-'));
+        const vA = allL.map(l=>cA[l]||0); const vB = allL.map(l=>cB[l]||0);
+        const totA = vA.reduce((a,b)=>a+b,0); const totB = vB.reduce((a,b)=>a+b,0);
+        const pA = allL.map((l,i)=>totA?Math.round(vA[i]/totA*100):0);
+        const pB = allL.map((l,i)=>totB?Math.round(vB[i]/totB*100):0);
+        makeCmpPie(`chart-${q}-a`, `legend-${q}-a`, allL, vA, CMP_A);
+        makeCmpPie(`chart-${q}-b`, `legend-${q}-b`, allL, vB, CMP_B);
+        makePieDiffTable(`${q}-diff-table`, allL, pA, allL, pB);
+      }
+
+      // Helper: render a compare bar
+      function cmpBar(canvasId, cols, sortKey, options = {}, filterFnA = null, filterFnB = null) {
+        const rA = filterFnA ? filterFnA(rowsA) : rowsA;
+        const rB = filterFnB ? filterFnB(rowsB) : rowsB;
+        const labels = cols.map(c => shortLabel(c));
+        const vA = cols.map(c => avgScore(rA, c));
+        const vB = cols.map(c => avgScore(rB, c));
+        const diffs = vA.map((a, i) => vB[i] - a);
+        const s = sortCmpData(labels, vA, vB, barSortMode[sortKey]);
+        makeCmpBar(canvasId, s.labels, s.valuesA, s.valuesB, s.diffs, options);
+      }
+
+      // Q1
+      cmpPies('q1', 'Hányadik osztályba jár/járnak a gyermeke/gyermekei? (több is bejelölhető)', false);
+      // Q2
+      { const cols=headers.filter(h=>h.includes('Miért íratta')&&h.includes('[')); cmpBar('chart-q2',cols,'q2'); }
+      // Q4
+      { const cols=headers.filter(h=>h.includes('Mennyire teljesültek')&&h.includes('[')); cmpBar('chart-q4',cols,'q4'); }
+      // Q2 vs Q4
+      { const prefQ2='Miért íratta gyermekét/gyermekeit a szalézi általános iskolába? Azért, mert számunkra fontos a(z) ['; const prefQ4='Mennyire teljesültek az előzetes elvárásai? A várakozásainknak megfelelően teljesült: [';
+        const cQ2=headers.filter(h=>h.startsWith(prefQ2)); const cQ4=headers.filter(h=>h.startsWith(prefQ4));
+        const labels=cQ2.map(c=>shortLabel(c));
+        const vA=cQ2.map((c,i)=>avgScore(rowsA,cQ4[i])-avgScore(rowsA,c));
+        const vB=cQ2.map((c,i)=>avgScore(rowsB,cQ4[i])-avgScore(rowsB,c));
+        const diffs=vA.map((a,i)=>vB[i]-a);
+        const s=sortCmpData(labels,vA,vB,barSortMode.q2q4);
+        makeCmpBar('chart-q2-q4-diff',s.labels,s.valuesA,s.valuesB,s.diffs,{tickCallback:v=>{if(v===-2)return 'Sokkal rosszabb';if(v===-1)return 'Rosszabb';if(v===0)return 'Ugyanolyan';if(v===1)return 'Jobb';if(v===2)return 'Sokkal jobb';return v;}}); }
+      // Q5
+      cmpPies('q5','Terveik szerint 8. osztályig az iskolában marad gyermekük?', false, ['Igen','Még nem döntöttem','Nem']);
+      // Q6
+      cmpPies('q6','Döntésüket mennyiben befolyásolják az iskola által felső tagozaton kínált lehetőségek?', false, ['Nem döntően, de kis mértékben szerepet játszik','Talán','Nagyon fontos szempont','Kizárólag ez határozza meg','Egyáltalán nem']);
+      // Q7
+      renderQ7Cmp(rowsA, rowsB, headers);
+      // Q8
+      cmpPies('q8','Milyen típusú középiskolába szeretné járatni gyermekét az általános iskola után? (több is bejelölhető)', true, ['Gimnázium','Technikum/Szakgimnázium','Még nem döntöttem/nem tudom']);
+      // Q9
+      cmpPies('q9','Ha van kisebb gyermeke, tervezi-e a szalézi iskolába íratni?', false, ['Igen','Még nem döntöttem','Nem','Nincs kisebb gyermekem']);
+      // Q10
+      cmpPies('q10','Van-e olyan gyermeke, aki járt a szalézi általános iskolába, de még általános iskolás korában átment másik oktatási intézménybe?', false, ['Igen','Nem','Igen, de később visszahoztam']);
+      // Q11
+      { const cols=headers.filter(h=>h.includes('amelyek miatt')&&h.includes('['));
+        const q10col='Van-e olyan gyermeke, aki járt a szalézi általános iskolába, de még általános iskolás korában átment másik oktatási intézménybe?';
+        cmpBar('chart-q11',cols,'q11',{},
+          r=>r.filter(x=>(x[q10col]||'').startsWith('Igen')).length>0 ? r.filter(x=>(x[q10col]||'').startsWith('Igen')) : r,
+          r=>r.filter(x=>(x[q10col]||'').startsWith('Igen')).length>0 ? r.filter(x=>(x[q10col]||'').startsWith('Igen')) : r
+        ); }
+      // Q12
+      cmpPies('q12','Mi a véleménye az iskolai étkeztetés költségéről?', false, ['Olcsó','Megfelelő','Drága']);
+      // Q13
+      cmpPies('q13','Mi a véleménye az iskolai étkeztetés minőségéről?', false, ['Megfelelő','Nem megfelelő']);
+    }
+
+    function renderQ7(filtered, headers) {
+      const cols = headers.filter(h => h.includes('megfontolná vagy biztosan szeretné') && h.includes('['));
+      const q6col = 'Döntésüket mennyiben befolyásolják az iskola által felső tagozaton kínált lehetőségek?';
+      const labels = cols.map(c => shortLabel(c));
+      let values;
+      if (!weighQ7) { values = cols.map(c => avgScore(filtered, c)); }
+      else { values = cols.map(c => { const vals = filtered.map(r => { const s=SCORE_MAP[r[c]]; if(s===undefined) return null; const w=WEIGHT_MAP[r[q6col]]||1.0; return {score:s,w}; }).filter(x=>x!==null); if(!vals.length) return 0; const tw=vals.reduce((a,x)=>a+x.w,0); return vals.reduce((a,x)=>a+x.score*x.w,0)/tw; }); }
+      const s = sortBarData(labels, values, barSortMode.q7);
+      makeBar('chart-q7', s.labels, s.values);
+    }
+
+    function renderQ7Cmp(rowsA, rowsB, headers) {
+      const cols = headers.filter(h => h.includes('megfontolná vagy biztosan szeretné') && h.includes('['));
+      const q6col = 'Döntésüket mennyiben befolyásolják az iskola által felső tagozaton kínált lehetőségek?';
+      const labels = cols.map(c => shortLabel(c));
+      const getVals = (rows) => !weighQ7 ? cols.map(c=>avgScore(rows,c)) : cols.map(c=>{
+        const vals=rows.map(r=>{const s=SCORE_MAP[r[c]];if(s===undefined) return null;const w=WEIGHT_MAP[r[q6col]]||1.0;return{score:s,w};}).filter(x=>x!==null);
+        if(!vals.length) return 0; const tw=vals.reduce((a,x)=>a+x.w,0); return vals.reduce((a,x)=>a+x.score*x.w,0)/tw;
+      });
+      const vA = getVals(rowsA); const vB = getVals(rowsB);
+      const diffs = vA.map((a,i)=>vB[i]-a);
+      const s = sortCmpData(labels, vA, vB, barSortMode.q7);
+      makeCmpBar('chart-q7', s.labels, s.valuesA, s.valuesB, s.diffs);
+    }
+
+    // ============================================================
+    // TEXT ANSWER RENDERERS (Q3, Q14)
+    // ============================================================
+    const SKIP_VALS = new Set([
+      '', '-', 'nem', 'nem volt', 'nem volt.', 'nem.', 'x', 'n/a', 'nincs', 'nincs.', 'más nem'
+    ]);
+
+    function isSkip(t) {
+      if (!t) return true;
+      const s = t.trim().toLowerCase();
+      return SKIP_VALS.has(s) || s.length <= 1;
+    }
+
+    function buildTextList(rows, col) {
+      return rows
+        .map(r => (r[col] || '').trim())
+        .filter(t => !isSkip(t));
+    }
+
+    function renderTextList(ul, texts) {
+      if (!texts.length) {
+        ul.innerHTML = `<li class="text-empty">Nem érkezett érdemi szöveges válasz.</li>`;
+        return;
+      }
+      ul.innerHTML = texts.map((t, i) =>
+        `<li class="text-answer-item"><span class="text-answer-num">${i + 1}.</span><span>${t}</span></li>`
+      ).join('');
+    }
+
+    function renderTextAnswers() {
+      const Q3_COL = 'Volt-e egyéb szempont, amiért az iskola mellett döntött?';
+      const Q14_COL = 'Kérjük, amennyiben bármilyen egyéb észrevétele vagy javaslata van itt röviden foglalja össze!';
+
+      [
+        { boxId: 'text-q3', col: Q3_COL, label: 'Szöveges válaszok' },
+        { boxId: 'text-q14', col: Q14_COL, label: 'Egyéb észrevételek és javaslatok' }
+      ].forEach(({ boxId, col, label }) => {
+        const box = document.getElementById(boxId);
+        if (!box) return;
+
+        if (!compareMode) {
+          // Normál mód: szűrt sorok, egy lista
+          const texts = buildTextList(getFiltered(), col);
+          box.innerHTML = `
+            <div class="text-answers-header">
+              <span>${label}</span>
+              <span class="text-answers-count">${texts.length}</span>
+            </div>
+            <ul class="text-answers-list" id="${boxId}-list"></ul>`;
+          renderTextList(box.querySelector(`#${boxId}-list`), texts);
+        } else {
+          // Összehasonlítás mód: két oszlop
+          const textsA = buildTextList(getByGrade(cmpGradeA), col);
+          const textsB = buildTextList(getByGrade(cmpGradeB), col);
+          const labelA = GRADE_SHORT[cmpGradeA] || cmpGradeA;
+          const labelB = GRADE_SHORT[cmpGradeB] || cmpGradeB;
+          box.innerHTML = `
+            <div class="text-answers-header">
+              <span>${label}</span>
+            </div>
+            <div class="text-answers-cols">
+              <div class="text-answers-col">
+                <div class="text-col-header a">A: ${labelA} &nbsp;(${textsA.length})</div>
+                <ul class="text-answers-list" id="${boxId}-list-a"></ul>
+              </div>
+              <div class="text-answers-col">
+                <div class="text-col-header b">B: ${labelB} &nbsp;(${textsB.length})</div>
+                <ul class="text-answers-list" id="${boxId}-list-b"></ul>
+              </div>
+            </div>`;
+          renderTextList(box.querySelector(`#${boxId}-list-a`), textsA);
+          renderTextList(box.querySelector(`#${boxId}-list-b`), textsB);
+        }
+      });
+    }
+
+    // ============================================================
+    // FILTER INTERACTION
+    // ============================================================
+    document.querySelectorAll('.filter-check').forEach(label => {
+      label.addEventListener('click', () => {
+        if (compareMode) return;
+        const grade = label.dataset.grade;
+        const cb = label.querySelector('input');
+        const willCheck = !cb.checked;
+        cb.checked = willCheck;
+        label.classList.toggle('active', willCheck);
+        if (willCheck) activeGrades.add(grade); else activeGrades.delete(grade);
+        renderAll();
+      });
+    });
+
+    document.querySelectorAll('.sort-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const chart = btn.dataset.chart;
+        barSortMode[chart] = barSortMode[chart] === 'desc' ? 'asc' : 'desc';
+        btn.textContent = `Rendezés: ${barSortMode[chart] === 'desc' ? 'csökkenő' : 'növekvő'}`;
+        renderAll();
+      });
+    });
+
+    const wToggle = document.getElementById('weight-toggle-q7');
+    wToggle.addEventListener('click', () => {
+      weighQ7 = !weighQ7;
+      wToggle.classList.toggle('on', weighQ7);
+      document.getElementById('weight-label-q7').textContent = `Súlyozás a 6. kérdés alapján: ${weighQ7 ? 'BE' : 'KI'}`;
+      if (compareMode) { renderQ7Cmp(getByGrade(cmpGradeA), getByGrade(cmpGradeB), Object.keys(allRows[0]||{})); }
+      else { renderQ7(getFiltered(), Object.keys(allRows[0]||{})); }
+    });
+
+    // COMPARE TOGGLE
+    document.getElementById('cmp-toggle-btn').addEventListener('click', () => {
+      compareMode = !compareMode;
+      document.getElementById('cmp-toggle-btn').classList.toggle('active', compareMode);
+      document.getElementById('cmp-bar').classList.toggle('visible', compareMode);
+      setCmpVisibility();
+      renderAll();
+    });
+
+    // COMPARE SELECTS
+    document.getElementById('cmp-sel-a').addEventListener('change', function() {
+      cmpGradeA = this.value;
+      if (compareMode) renderAll();
+    });
+    document.getElementById('cmp-sel-b').addEventListener('change', function() {
+      cmpGradeB = this.value;
+      if (compareMode) renderAll();
+    });
+
+    // ============================================================
+    // INIT
+    // ============================================================
+    async function init() {
+      const { rows } = parseAndExpand(TSV_DATA);
+      allRows = rows;
+      renderAll();
+    }
+
+    init();
+  </script>
+</body>
+</html>
