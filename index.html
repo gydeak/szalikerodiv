@@ -1318,7 +1318,7 @@
       // Q9
       { const col='Ha van kisebb gyermeke, tervezi-e a szalézi iskolába íratni?'; const ORDER=['Igen','Még nem döntöttem','Nem','Nincs kisebb gyermekem']; const countsAll=countValues(filtered,col); const labelsAll=ORDER.filter(k=>countsAll[k]!=null); makePie('chart-q9a','legend-q9a',labelsAll,labelsAll.map(l=>countsAll[l]||0)); const valid=['Igen','Még nem döntöttem','Nem']; const lB=valid.filter(v=>countsAll[v]!=null); makePie('chart-q9b','legend-q9b',lB,lB.map(l=>countsAll[l]||0)); }
       // Q10
-      { const col='Van-e olyan gyermeke, aki járt a szalézi általános iskolába, de még általános iskolás korában átment másik oktatási intézménybe?'; const ORDER=['Igen','Nem','Igen, de később visszahoztam']; const counts=countValues(filtered,col); const labels=ORDER.filter(k=>counts[k]!=null); makePie('chart-q10','legend-q10',labels,labels.map(l=>counts[l]||0)); }
+      { const col='Van-e olyan gyermeke, aki járt a szalézi általános iskolába, de még általános iskolás korában átment másik oktatási intézménybe?'; const ORDER=['Igen','Nem','Igen, de később visszahoztam.']; const counts=countValues(filtered,col); const labels=ORDER.filter(k=>counts[k]!=null); makePie('chart-q10','legend-q10',labels,labels.map(l=>counts[l]||0)); }
       // Q11
       { const cols=headers.filter(h=>h.includes('amelyek miatt')&&h.includes('[')); const labels=cols.map(c=>shortLabel(c)); const q10col='Van-e olyan gyermeke, aki járt a szalézi általános iskolába, de még általános iskolás korában átment másik oktatási intézménybe?'; const rel=filtered.filter(r=>(r[q10col]||'').startsWith('Igen')); const values=cols.map(c=>avgScore(rel.length>0?rel:filtered,c)); const s=sortBarData(labels,values,barSortMode.q11); makeBar('chart-q11',s.labels,s.values); }
       // Q12
@@ -1391,7 +1391,7 @@
       // Q9
       cmpPies('q9','Ha van kisebb gyermeke, tervezi-e a szalézi iskolába íratni?', false, ['Igen','Még nem döntöttem','Nem','Nincs kisebb gyermekem']);
       // Q10
-      cmpPies('q10','Van-e olyan gyermeke, aki járt a szalézi általános iskolába, de még általános iskolás korában átment másik oktatási intézménybe?', false, ['Igen','Nem','Igen, de később visszahoztam']);
+      cmpPies('q10','Van-e olyan gyermeke, aki járt a szalézi általános iskolába, de még általános iskolás korában átment másik oktatási intézménybe?', false, ['Igen','Nem','Igen, de később visszahoztam.']);
       // Q11
       { const cols=headers.filter(h=>h.includes('amelyek miatt')&&h.includes('['));
         const q10col='Van-e olyan gyermeke, aki járt a szalézi általános iskolába, de még általános iskolás korában átment másik oktatási intézménybe?';
