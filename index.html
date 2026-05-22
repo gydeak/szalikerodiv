@@ -1,6 +1,14 @@
 <!DOCTYPE html>
 <html lang="hu">
 
+<script>
+  const pw = prompt("SzaliKerdoiv26");
+  if (pw !== "SzaleziSzuloi2026") {
+    document.body.innerHTML = "<p>Hozzáférés megtagadva.</p>";
+    throw new Error("auth");
+  }
+</script>
+  
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
